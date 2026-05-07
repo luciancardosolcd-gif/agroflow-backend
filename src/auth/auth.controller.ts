@@ -1,3 +1,4 @@
+// v2
 import { Controller, Post, Body, HttpCode } from "@nestjs/common";
 import { ApiTags, ApiOperation } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";

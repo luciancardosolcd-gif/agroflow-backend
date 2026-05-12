@@ -9,6 +9,15 @@ export const Roles = (...roles: string[]) => {
   return decorator;
 };
 
+export const PERFIS = {
+  ADMIN: 'admin',
+  GESTOR: 'gestor',
+  OPERADOR: 'operador',
+  AGRONOMO: 'agronomo',
+  VISITANTE: 'visitante',
+  PRODUTOR: 'produtor',
+}
+
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}

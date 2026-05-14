@@ -3,6 +3,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN rm -rf dist node_modules/.cache && npm run build
-# rebuild v3 2026-05-14
+ARG CACHEBUST=1
+RUN rm -rf dist && npm run build
 CMD ["node","dist/main"]

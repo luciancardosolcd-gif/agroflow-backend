@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
-import { Financeira } from '../financeira.entidade';
+import { Financeiro } from '../financeiro.entity';
 import { FiltroDashboardDto } from '../dto/filtro-dashboard.dto';
 import { TipoLancamento } from '../enums/tipo-lancamento.enum';
 import { PeriodoFiltro } from '../enums/periodo-filtro.enum';

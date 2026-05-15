@@ -6,7 +6,7 @@ import { RolesGuard } from '../../auth/roles.guard';
 
 @ApiTags('Financeiro - Dashboard')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(RolesGuard)
 @Controller('financeiro/dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}

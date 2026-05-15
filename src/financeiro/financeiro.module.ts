@@ -5,7 +5,7 @@ import { FinanceiroService } from './financeiro.service';
 import { FinanceiroController } from './financeiro.controller';
 import { DashboardService } from './dashboard/dashboard.service';
 import { DashboardController } from './dashboard/dashboard.controller';
- 
+
 @Module({
   imports: [TypeOrmModule.forFeature([Financeiro])],
   controllers: [FinanceiroController, DashboardController],
@@ -13,4 +13,3 @@ import { DashboardController } from './dashboard/dashboard.controller';
   exports: [FinanceiroService, DashboardService],
 })
 export class FinanceiroModule {}
- 

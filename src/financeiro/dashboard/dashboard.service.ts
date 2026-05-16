@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, IsNull, Not } from 'typeorm';
 import { Financeiro } from '../financeiro.entity';
 import { FiltroDashboardDto } from '../dto/filtro-dashboard.dto';
 import { TipoLancamento } from '../enums/tipo-lancamento.enum';
@@ -44,68 +44,103 @@ export class DashboardService {
     return { dataInicio, dataFim };
   }
 
-  private montarWhere(filtro: FiltroDashboardDto) {
-    const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
-    const where: any = { data: Between(dataInicio, dataFim) };
-    if (filtro.fazendaId) where.fazendaId = filtro.fazendaId;
-    if (filtro.safraId) where.safraId = filtro.safraId;
-    return where;
-  }
-
   async buscarResumo(filtro: FiltroDashboardDto) {
-    const where = this.montarWhere(filtro);
-    const [receitas, despesas] = await Promise.all([
-      this.financeiroRepository.sum('valor', { ...where, tipo: TipoLancamento.RECEITA }),
-      this.financeiroRepository.sum('valor', { ...where, tipo: TipoLancamento.DESPESA }),
-    ]);
-    const totalReceitas = receitas ?? 0;
-    const totalDespesas = despesas ?? 0;
+    const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
+
+    const query = this.financeiroRepository.createQueryBuilder('f');
+
+    // Inclui registros com data no período OU com data nula (createdAt no período)
+    query.where(
+      '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
+      { dataInicio, dataFim },
+    );
+
+    if (filtro.fazendaId) query.andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId });
+    if (filtro.safraId) query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
+
+    const lancamentos = await query.getMany();
+
+    const totalReceitas = lancamentos
+      .filter((l) => l.tipo === TipoLancamento.RECEITA)
+      .reduce((acc, l) => acc + Number(l.valor), 0);
+
+    const totalDespesas = lancamentos
+      .filter((l) => l.tipo === TipoLancamento.DESPESA)
+      .reduce((acc, l) => acc + Number(l.valor), 0);
+
     const saldo = totalReceitas - totalDespesas;
-    const margemLucro = totalReceitas > 0 ? ((saldo / totalReceitas) * 100).toFixed(2) : '0.00';
-    return { totalReceitas, totalDespesas, saldo, margemLucro: parseFloat(margemLucro) };
+    const margemLucro = totalReceitas > 0 ? parseFloat(((saldo / totalReceitas) * 100).toFixed(2)) : 0;
+
+    return { totalReceitas, totalDespesas, saldo, margemLucro };
   }
 
   async buscarDespesasPorCategoria(filtro: FiltroDashboardDto) {
     const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
+
     const query = this.financeiroRepository
       .createQueryBuilder('f')
       .select('f.categoria', 'categoria')
       .addSelect('SUM(f.valor)', 'total')
       .where('f.tipo = :tipo', { tipo: TipoLancamento.DESPESA })
-      .andWhere('f.data BETWEEN :dataInicio AND :dataFim', { dataInicio, dataFim })
+      .andWhere(
+        '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
+        { dataInicio, dataFim },
+      )
       .groupBy('f.categoria')
       .orderBy('total', 'DESC');
+
     if (filtro.fazendaId) query.andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId });
     if (filtro.safraId) query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
+
     const resultado = await query.getRawMany();
-    return resultado.map((r) => ({ categoria: r.categoria ?? 'Sem categoria', total: parseFloat(r.total) }));
+    return resultado.map((r) => ({
+      categoria: r.categoria ?? 'Sem categoria',
+      total: parseFloat(r.total),
+    }));
   }
 
   async buscarEvolucaoMensal(filtro: FiltroDashboardDto) {
     const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
+
     const query = this.financeiroRepository
       .createQueryBuilder('f')
-      .select("TO_CHAR(f.data, 'YYYY-MM')", 'mes')
+      .select("TO_CHAR(COALESCE(f.data, f.createdAt), 'YYYY-MM')", 'mes')
       .addSelect('f.tipo', 'tipo')
       .addSelect('SUM(f.valor)', 'total')
-      .where('f.data BETWEEN :dataInicio AND :dataFim', { dataInicio, dataFim })
-      .groupBy("TO_CHAR(f.data, 'YYYY-MM'), f.tipo")
-      .orderBy("TO_CHAR(f.data, 'YYYY-MM')", 'ASC');
+      .where(
+        '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
+        { dataInicio, dataFim },
+      )
+      .groupBy("TO_CHAR(COALESCE(f.data, f.createdAt), 'YYYY-MM'), f.tipo")
+      .orderBy("TO_CHAR(COALESCE(f.data, f.createdAt), 'YYYY-MM')", 'ASC');
+
     if (filtro.fazendaId) query.andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId });
     if (filtro.safraId) query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
+
     const rows = await query.getRawMany();
     const porMes: Record<string, { mes: string; receitas: number; despesas: number }> = {};
+
     for (const row of rows) {
       if (!porMes[row.mes]) porMes[row.mes] = { mes: row.mes, receitas: 0, despesas: 0 };
       if (row.tipo === TipoLancamento.RECEITA) porMes[row.mes].receitas = parseFloat(row.total);
       else porMes[row.mes].despesas = parseFloat(row.total);
     }
+
     return Object.values(porMes);
   }
 
   async buscarLancamentosRecentes(filtro: FiltroDashboardDto, limite = 10) {
-    const where = this.montarWhere(filtro);
-    return this.financeiroRepository.find({ where, order: { data: 'DESC' }, take: limite });
+    const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
+
+    return this.financeiroRepository
+      .createQueryBuilder('f')
+      .where(
+        '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
+        { dataInicio, dataFim },
+      )
+      .orderBy('f.createdAt', 'DESC')
+      .take(limite)
+      .getMany();
   }
 
   async buscarTodosDados(filtro: FiltroDashboardDto) {

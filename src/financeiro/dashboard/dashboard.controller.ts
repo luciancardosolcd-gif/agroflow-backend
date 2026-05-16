@@ -1,13 +1,14 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 import { DashboardService } from './dashboard.service';
 import { FiltroDashboardDto } from '../dto/filtro-dashboard.dto';
 import { RolesGuard } from '../../auth/roles.guard';
 
 @ApiTags('Financeiro - Dashboard')
 @ApiBearerAuth()
-@UseGuards(RolesGuard)
-@Controller('financeiro/dashboard')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Controller('fin-dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 

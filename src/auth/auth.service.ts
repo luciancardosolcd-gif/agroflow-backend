@@ -23,4 +23,26 @@ export class AuthService {
       throw new UnauthorizedException('Usuário inativo');
     await this.usersRepo.update(user.id, { ultimoAcesso: new Date() });
     const secret = this.configService.get<string>('JWT_SECRET');
-    const payload = { sub: user.id, email: user.
+    const payload = { sub: user.id, email: user.email, perfil: user.perfil };
+    return {
+      accessToken: this.jwtService.sign(payload, { secret, expiresIn: '8h' }),
+      refreshToken: this.jwtService.sign(payload, { secret, expiresIn: '7d' }),
+      user: { id: user.id, nome: user.nome, email: user.email, perfil: user.perfil },
+    };
+  }
+
+  async refresh(token: string) {
+    try {
+      const secret = this.configService.get<string>('JWT_SECRET');
+      const payload = this.jwtService.verify(token, { secret });
+      return {
+        accessToken: this.jwtService.sign(
+          { sub: payload.sub, email: payload.email, perfil: payload.perfil },
+          { secret, expiresIn: '8h' },
+        ),
+      };
+    } catch {
+      throw new UnauthorizedException('Token inválido');
+    }
+  }
+}

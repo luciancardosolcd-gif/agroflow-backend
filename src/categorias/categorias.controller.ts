@@ -54,4 +54,7 @@ export class CategoriasController {
   @Patch(':id/toggle')
   @Roles('admin')
   @ApiOperation({ summary: 'Ativa/desativa categoria' })
- toggleAtivo(@Param('id') id: string) {
+  toggleAtivo(@Param('id') id: string) {
+    return this.service.toggleAtivo(id);
+  }
+}

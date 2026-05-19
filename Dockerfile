@@ -3,6 +3,5 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-RUN npm run build
-RUN ls -la dist/categorias || echo "PASTA CATEGORIAS NAO ENCONTRADA NO DIST"
+RUN npm run build && ls dist/categorias || echo "SEM CATEGORIAS"
 CMD ["node","dist/main"]

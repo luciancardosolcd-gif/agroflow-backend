@@ -2,6 +2,7 @@ FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
+ARG CACHEBUST=1
 COPY . .
-RUN npm run build && ls dist/categorias || echo "SEM CATEGORIAS"
+RUN npm run build
 CMD ["node","dist/main"]

@@ -145,6 +145,7 @@ export class CategoriasService implements OnModuleInit {
     const cat = await this.buscarPorId(id);
     Object.assign(cat, dto);
     return this.repo.save(cat);
+    saved[seed.code] = await this.repo.save(entity);
   }
 
   async toggleAtivo(id: string) {

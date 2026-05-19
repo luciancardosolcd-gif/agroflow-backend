@@ -3,8 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { ConfigService } from '@nestjs/config';
 import { User } from '../users/user.entity';
+
+const JWT_SECRET = '1b188fff14990a2190da34907dc8d3d1e555debe7995260fb47cfcca73d63d16';
 
 @Injectable()
 export class AuthService {
@@ -12,7 +13,6 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepo: Repository<User>,
     private jwtService: JwtService,
-    private configService: ConfigService,
   ) {}
 
   async login(email: string, senha: string) {
@@ -22,23 +22,21 @@ export class AuthService {
     if (user.status !== 'ativo')
       throw new UnauthorizedException('Usuário inativo');
     await this.usersRepo.update(user.id, { ultimoAcesso: new Date() });
-    const secret = this.configService.get<string>('JWT_SECRET');
     const payload = { sub: user.id, email: user.email, perfil: user.perfil };
     return {
-      accessToken: this.jwtService.sign(payload, { secret, expiresIn: '8h' }),
-      refreshToken: this.jwtService.sign(payload, { secret, expiresIn: '7d' }),
+      accessToken: this.jwtService.sign(payload, { secret: JWT_SECRET, expiresIn: '8h' }),
+      refreshToken: this.jwtService.sign(payload, { secret: JWT_SECRET, expiresIn: '7d' }),
       user: { id: user.id, nome: user.nome, email: user.email, perfil: user.perfil },
     };
   }
 
   async refresh(token: string) {
     try {
-      const secret = this.configService.get<string>('JWT_SECRET');
-      const payload = this.jwtService.verify(token, { secret });
+      const payload = this.jwtService.verify(token, { secret: JWT_SECRET });
       return {
         accessToken: this.jwtService.sign(
           { sub: payload.sub, email: payload.email, perfil: payload.perfil },
-          { secret, expiresIn: '8h' },
+          { secret: JWT_SECRET, expiresIn: '8h' },
         ),
       };
     } catch {

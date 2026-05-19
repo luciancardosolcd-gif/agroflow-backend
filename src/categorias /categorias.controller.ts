@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Patch, Body, Param, Query, UseGuards } from
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { CategoriasService } from './categorias.service';
-import { CriarCategoriaDto, AtualizarCategoriaDto } from './dto/categorias.dto';
+import { CriarCategoriaDto, AtualizarCategoriaDto } from './categorias.dto';
 import { RolesGuard, Roles } from '../auth/roles.guard';
 
 @ApiTags('Categorias Financeiras')

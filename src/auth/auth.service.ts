@@ -21,26 +21,4 @@ export class AuthService {
       throw new UnauthorizedException('E-mail ou senha incorretos');
     if (user.status !== 'ativo')
       throw new UnauthorizedException('Usuário inativo');
-    await this.usersRepo.update(user.id, { ultimoAcesso: new Date() });
-    const payload = { sub: user.id, email: user.email, perfil: user.perfil };
-    return {
-      accessToken: this.jwtService.sign(payload, { secret: JWT_SECRET, expiresIn: '8h' }),
-      refreshToken: this.jwtService.sign(payload, { secret: JWT_SECRET, expiresIn: '7d' }),
-      user: { id: user.id, nome: user.nome, email: user.email, perfil: user.perfil },
-    };
-  }
-
-  async refresh(token: string) {
-    try {
-      const payload = this.jwtService.verify(token, { secret: JWT_SECRET });
-      return {
-        accessToken: this.jwtService.sign(
-          { sub: payload.sub, email: payload.email, perfil: payload.perfil },
-          { secret: JWT_SECRET, expiresIn: '8h' },
-        ),
-      };
-    } catch {
-      throw new UnauthorizedException('Token inválido');
-    }
-  }
-}
+    await this.usersRepo.update(user.id, { ultimoAcesso: new Date() })

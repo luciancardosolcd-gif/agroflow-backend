@@ -74,7 +74,7 @@ export class CategoriasService implements OnModuleInit {
     const saved: Record<string, FinancialCategory> = {};
     for (const seed of seeds) {
       const entity = this.repo.create({ ...seed } as any);
-      saved[seed.code] = await this.repo.save(entity);
+      saved[seed.code] = await this.repo.save(entity) as unknown as FinancialCategory;
     }
 
     for (const seed of seeds) {
@@ -145,7 +145,6 @@ export class CategoriasService implements OnModuleInit {
     const cat = await this.buscarPorId(id);
     Object.assign(cat, dto);
     return this.repo.save(cat);
-    saved[seed.code] = await this.repo.save(entity) as FinancialCategory;
   }
 
   async toggleAtivo(id: string) {

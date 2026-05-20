@@ -2,9 +2,8 @@ import { Injectable, OnModuleInit, NotFoundException, BadRequestException } from
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { FinancialCategory } from './financial-category.entity';
-import { CriarCategoriaDto, AtualizarCategoriaDto } from './categorias.dto';
-import { InjectRepository as InjectRepo } from '@nestjs/typeorm';
 import { Financeiro } from '../financeiro/financeiro.entity';
+import { CriarCategoriaDto, AtualizarCategoriaDto } from './categorias.dto';
 
 @Injectable()
 export class CategoriasService implements OnModuleInit {
@@ -14,6 +13,7 @@ export class CategoriasService implements OnModuleInit {
     @InjectRepository(Financeiro)
     private readonly financeiroRepo: Repository<Financeiro>,
   ) {}
+
   async onModuleInit() {
     const count = await this.repo.count();
     if (count === 0) {
@@ -155,7 +155,8 @@ export class CategoriasService implements OnModuleInit {
     cat.active = !cat.active;
     return this.repo.save(cat);
   }
-async getDashboard(filters: { startDate?: string; endDate?: string; fazendaId?: string; safraId?: string }) {
+
+  async getDashboard(filters: { startDate?: string; endDate?: string; fazendaId?: string; safraId?: string }) {
     const mainCats = await this.repo.find({
       where: { level: 2, active: true },
       order: { sortOrder: 'ASC' },
@@ -211,4 +212,5 @@ async getDashboard(filters: { startDate?: string; endDate?: string; fazendaId?: 
       receitas:  addPct(receitas, totalReceitas),
       despesas:  addPct(despesas, totalDespesas),
     };
-  }}
+  }
+}

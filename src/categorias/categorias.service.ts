@@ -152,4 +152,60 @@ export class CategoriasService implements OnModuleInit {
     cat.active = !cat.active;
     return this.repo.save(cat);
   }
-}
+async getDashboard(filters: { startDate?: string; endDate?: string; fazendaId?: string; safraId?: string }) {
+    const mainCats = await this.repo.find({
+      where: { level: 2, active: true },
+      order: { sortOrder: 'ASC' },
+    });
+
+    const results = await Promise.all(
+      mainCats.map(async (mainCat) => {
+        const subCats = await this.repo
+          .createQueryBuilder('c')
+          .where('c.mainCategoryId = :id OR c.id = :id', { id: mainCat.id })
+          .getMany();
+
+        const subIds = subCats.map((s) => s.id);
+
+        const qb = this.financeiroRepo
+          .createQueryBuilder('f')
+          .select('SUM(ABS(f.valor))', 'total')
+          .addSelect('COUNT(f.id)', 'qtd')
+          .where('f.financial_category_id IN (:...ids)', { ids: subIds.length ? subIds : ['0'] });
+
+        if (filters.startDate) qb.andWhere('f.data >= :start', { start: filters.startDate });
+        if (filters.endDate)   qb.andWhere('f.data <= :end',   { end: filters.endDate });
+        if (filters.fazendaId) qb.andWhere('f.fazendaId = :faz', { faz: filters.fazendaId });
+        if (filters.safraId)   qb.andWhere('f.safraId = :safra', { safra: filters.safraId });
+
+        const raw = await qb.getRawOne();
+        return {
+          ...mainCat,
+          total: parseFloat(raw?.total || '0'),
+          qtd_lancamentos: parseInt(raw?.qtd || '0'),
+        };
+      }),
+    );
+
+    const byType = (type: string) => results.filter((r) => r.nature === type);
+    const sum = (items: any[]) => items.reduce((a, r) => a + r.total, 0);
+    const addPct = (items: any[], total: number) =>
+      items.map((i) => ({ ...i, percentual: total > 0 ? ((i.total / total) * 100).toFixed(2) : '0.00' }));
+
+    const receitas      = byType('receita');
+    const despesas      = byType('despesa');
+    const totalReceitas = sum(receitas);
+    const totalDespesas = sum(despesas);
+    const lucro         = totalReceitas - totalDespesas;
+
+    return {
+      summary: {
+        totalReceitas,
+        totalDespesas,
+        lucroLiquido: lucro,
+        margemLiquida: totalReceitas > 0 ? parseFloat(((lucro / totalReceitas) * 100).toFixed(2)) : 0,
+      },
+      receitas:  addPct(receitas, totalReceitas),
+      despesas:  addPct(despesas, totalDespesas),
+    };
+  }}

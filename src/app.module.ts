@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { FinanceiroModule } from './financeiro/financeiro.module';
+import { FinancialCategoriesModule } from './financial-categories/financial-categories.module';  
 import { ContratosModule } from './contratos/contratos.module';
 import { EstoqueModule } from './estoque/estoque.module';
 import { ClientesModule } from './clientes/clientes.module';
@@ -26,6 +27,7 @@ import { CategoriasModule } from './categorias/categorias.module';
         logging: false,
         schema: 'public',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
+         FinancialCategoriesModule,
       }),
       inject: [ConfigService],
     }),

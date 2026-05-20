@@ -7,8 +7,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { User } from '../users/user.entity';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
-
+const JWT_SECRET = process.env.JWT_SECRET || '1b188fff14990a2190da34907dc8d3d1e555debe7995260fb47cfcca73d63d16';
 @Module({
   imports: [
     PassportModule,

@@ -30,7 +30,16 @@ export class CategoriasController {
   buscar(@Query('q') termo: string) {
     return this.service.buscar(termo ?? '');
   }
-
+@Get('dashboard')
+  @ApiOperation({ summary: 'Dashboard consolidado por categoria principal' })
+  getDashboard(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('fazendaId') fazendaId?: string,
+    @Query('safraId') safraId?: string,
+  ) {
+    return this.service.getDashboard({ startDate, endDate, fazendaId, safraId });
+  }
   @Get(':id')
   @ApiOperation({ summary: 'Busca categoria por ID' })
   buscarPorId(@Param('id') id: string) {

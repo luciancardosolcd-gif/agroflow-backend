@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { ConfigService } from '@nestjs/config';
 import { User } from '../users/user.entity';
 
 @Injectable()
@@ -12,11 +11,11 @@ export class AuthService {
     @InjectRepository(User)
     private usersRepo: Repository<User>,
     private jwtService: JwtService,
-    private configService: ConfigService,
   ) {}
 
   async login(email: string, senha: string) {
-    const secret = this.configService.get<string>('JWT_SECRET');
+    const secret = process.env.JWT_SECRET;
+    console.log('JWT_SECRET exists:', !!secret);
     const user = await this.usersRepo.findOne({ where: { email: email.toLowerCase() } });
     if (!user || !(await bcrypt.compare(senha, user.senhaHash)))
       throw new UnauthorizedException('E-mail ou senha incorretos');
@@ -33,8 +32,16 @@ export class AuthService {
 
   async refresh(token: string) {
     try {
-      const secret = this.configService.get<string>('JWT_SECRET');
+      const secret = process.env.JWT_SECRET;
       const payload = this.jwtService.verify(token, { secret });
       return {
         accessToken: this.jwtService.sign(
-          { sub: payload.sub, email: payload.email, perfil: payload.perfi
+          { sub: payload.sub, email: payload.email, perfil: payload.perfil },
+          { secret, expiresIn: '8h' },
+        ),
+      };
+    } catch {
+      throw new UnauthorizedException('Token inválido');
+    }
+  }
+}

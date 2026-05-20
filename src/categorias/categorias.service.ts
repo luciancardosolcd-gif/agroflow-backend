@@ -11,8 +11,9 @@ export class CategoriasService implements OnModuleInit {
   constructor(
     @InjectRepository(FinancialCategory)
     private readonly repo: Repository<FinancialCategory>,
+    @InjectRepository(Financeiro)
+    private readonly financeiroRepo: Repository<Financeiro>,
   ) {}
-
   async onModuleInit() {
     const count = await this.repo.count();
     if (count === 0) {

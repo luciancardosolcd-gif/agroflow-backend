@@ -5,8 +5,6 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../users/user.entity';
 
-const SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -24,19 +22,18 @@ export class AuthService {
     await this.usersRepo.update(user.id, { ultimoAcesso: new Date() });
     const payload = { sub: user.id, email: user.email, perfil: user.perfil };
     return {
-      accessToken: this.jwtService.sign(payload, { secret: SECRET, expiresIn: '8h' }),
-      refreshToken: this.jwtService.sign(payload, { secret: SECRET, expiresIn: '7d' }),
+      accessToken: this.jwtService.sign(payload),
+      refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
       user: { id: user.id, nome: user.nome, email: user.email, perfil: user.perfil },
     };
   }
 
   async refresh(token: string) {
     try {
-      const payload = this.jwtService.verify(token, { secret: SECRET });
+      const payload = this.jwtService.verify(token);
       return {
         accessToken: this.jwtService.sign(
           { sub: payload.sub, email: payload.email, perfil: payload.perfil },
-          { secret: SECRET, expiresIn: '8h' },
         ),
       };
     } catch {

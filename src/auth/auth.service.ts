@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../users/user.entity';
 
-const SECRET = process.env.JWT_SECRET || 'fallback-secret-agroflow-2026';
+const SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
 
 @Injectable()
 export class AuthService {
@@ -16,8 +16,6 @@ export class AuthService {
   ) {}
 
   async login(email: string, senha: string) {
-    console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'FOUND' : 'NOT FOUND');
-    console.log('Using secret length:', SECRET.length);
     const user = await this.usersRepo.findOne({ where: { email: email.toLowerCase() } });
     if (!user || !(await bcrypt.compare(senha, user.senhaHash)))
       throw new UnauthorizedException('E-mail ou senha incorretos');

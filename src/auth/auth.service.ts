@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../users/user.entity';
 
+const SECRET = '1b188fff14990a2190da34907dc8d3d1e555debe7995260fb47cfcca73d63d16';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -18,26 +20,3 @@ export class AuthService {
     if (!user || !(await bcrypt.compare(senha, user.senhaHash)))
       throw new UnauthorizedException('E-mail ou senha incorretos');
     if (user.status !== 'ativo')
-      throw new UnauthorizedException('Usuário inativo');
-    await this.usersRepo.update(user.id, { ultimoAcesso: new Date() });
-    const payload = { sub: user.id, email: user.email, perfil: user.perfil };
-    return {
-      accessToken: this.jwtService.sign(payload),
-      refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' }),
-      user: { id: user.id, nome: user.nome, email: user.email, perfil: user.perfil },
-    };
-  }
-
-  async refresh(token: string) {
-    try {
-      const payload = this.jwtService.verify(token);
-      return {
-        accessToken: this.jwtService.sign(
-          { sub: payload.sub, email: payload.email, perfil: payload.perfil },
-        ),
-      };
-    } catch {
-      throw new UnauthorizedException('Token inválido');
-    }
-  }
-}

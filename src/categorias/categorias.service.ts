@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
 import { FinancialCategory } from './financial-category.entity';
 import { CriarCategoriaDto, AtualizarCategoriaDto } from './categorias.dto';
+import { InjectRepository as InjectRepo } from '@nestjs/typeorm';
+import { Financeiro } from '../financeiro/financeiro.entity';
 
 @Injectable()
 export class CategoriasService implements OnModuleInit {

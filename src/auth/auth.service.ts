@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../users/user.entity';
 
+const SECRET = process.env.JWT_SECRET || 'fallback-secret-agroflow-2026';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -14,8 +16,8 @@ export class AuthService {
   ) {}
 
   async login(email: string, senha: string) {
-    const secret = process.env.JWT_SECRET;
-    console.log('JWT_SECRET exists:', !!secret);
+    console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'FOUND' : 'NOT FOUND');
+    console.log('Using secret length:', SECRET.length);
     const user = await this.usersRepo.findOne({ where: { email: email.toLowerCase() } });
     if (!user || !(await bcrypt.compare(senha, user.senhaHash)))
       throw new UnauthorizedException('E-mail ou senha incorretos');
@@ -24,20 +26,19 @@ export class AuthService {
     await this.usersRepo.update(user.id, { ultimoAcesso: new Date() });
     const payload = { sub: user.id, email: user.email, perfil: user.perfil };
     return {
-      accessToken: this.jwtService.sign(payload, { secret, expiresIn: '8h' }),
-      refreshToken: this.jwtService.sign(payload, { secret, expiresIn: '7d' }),
+      accessToken: this.jwtService.sign(payload, { secret: SECRET, expiresIn: '8h' }),
+      refreshToken: this.jwtService.sign(payload, { secret: SECRET, expiresIn: '7d' }),
       user: { id: user.id, nome: user.nome, email: user.email, perfil: user.perfil },
     };
   }
 
   async refresh(token: string) {
     try {
-      const secret = process.env.JWT_SECRET;
-      const payload = this.jwtService.verify(token, { secret });
+      const payload = this.jwtService.verify(token, { secret: SECRET });
       return {
         accessToken: this.jwtService.sign(
           { sub: payload.sub, email: payload.email, perfil: payload.perfil },
-          { secret, expiresIn: '8h' },
+          { secret: SECRET, expiresIn: '8h' },
         ),
       };
     } catch {

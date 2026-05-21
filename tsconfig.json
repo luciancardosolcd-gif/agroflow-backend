@@ -14,5 +14,6 @@
     "strictNullChecks": false,
     "noImplicitAny": false,
     "noEmitOnError": false
-  }
+  },
+  "exclude": ["node_modules", "dist"]
 }

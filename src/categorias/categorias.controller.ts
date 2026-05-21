@@ -68,4 +68,4 @@ export class CategoriasController {
   toggleAtivo(@Param('id') id: string) {
     return this.service.toggleAtivo(id);
   }
-}
+} 

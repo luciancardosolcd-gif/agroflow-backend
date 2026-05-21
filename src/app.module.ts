@@ -4,7 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { FinanceiroModule } from './financeiro/financeiro.module';
 import { ContratosModule } from './contratos/contratos.module';
 import { EstoqueModule } from './estoque/estoque.module';
 import { ClientesModule } from './clientes/clientes.module';

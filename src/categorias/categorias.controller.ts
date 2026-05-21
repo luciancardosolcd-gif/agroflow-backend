@@ -16,7 +16,7 @@ export class CategoriasController {
   @ApiOperation({ summary: 'Retorna árvore hierárquica completa de categorias' })
   listarArvore() {
     return this.service.listarArvore();
-  }
+  } 
 
   @Get('analiticas')
   @ApiOperation({ summary: 'Lista apenas categorias analíticas' })

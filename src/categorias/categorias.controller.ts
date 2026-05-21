@@ -16,7 +16,7 @@ export class CategoriasController {
   @ApiOperation({ summary: 'Retorna árvore hierárquica completa de categorias' })
   listarArvore() {
     return this.service.listarArvore();
-  } 
+  }
 
   @Get('analiticas')
   @ApiOperation({ summary: 'Lista apenas categorias analíticas' })
@@ -30,7 +30,8 @@ export class CategoriasController {
   buscar(@Query('q') termo: string) {
     return this.service.buscar(termo ?? '');
   }
-@Get('dashboard')
+
+  @Get('dashboard')
   @ApiOperation({ summary: 'Dashboard consolidado por categoria principal' })
   getDashboard(
     @Query('startDate') startDate?: string,
@@ -40,6 +41,7 @@ export class CategoriasController {
   ) {
     return this.service.getDashboard({ startDate, endDate, fazendaId, safraId });
   }
+
   @Get(':id')
   @ApiOperation({ summary: 'Busca categoria por ID' })
   buscarPorId(@Param('id') id: string) {

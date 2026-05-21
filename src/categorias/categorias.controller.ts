@@ -31,9 +31,9 @@ export class CategoriasController {
     return this.service.buscar(termo ?? '');
   }
 
-  @Get('dashboard')
+  @Get('resumo-dashboard')
   @ApiOperation({ summary: 'Dashboard consolidado por categoria principal' })
-  getDashboard(
+  resumoDashboard(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('fazendaId') fazendaId?: string,

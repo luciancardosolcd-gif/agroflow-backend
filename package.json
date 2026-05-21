@@ -1,9 +1,10 @@
 {
   "name": "agroflow-backend",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "nest build",
-  "start": "nest build && node dist/main",
+    "start": "node dist/main",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main"
   },

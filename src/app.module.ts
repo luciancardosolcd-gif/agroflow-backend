@@ -46,4 +46,5 @@ import { SafrasModule } from './safras/safras.module';
     SafrasModule,
   ],
 })
+// force rebuild v2
 export class AppModule {}

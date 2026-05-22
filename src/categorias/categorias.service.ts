@@ -156,7 +156,7 @@ export class CategoriasService implements OnModuleInit {
     return this.repo.save(cat);
   }
 
-  async getDashboard(filters: { startDate?: string; endDate?: string; fazendaId?: string; safraId?: string }) {
+ async getDashboard(filters: { startDate?: string; endDate?: string; fazendaId?: string; safraId?: string }) {
     const mainCats = await this.repo.find({
       where: { level: 2, active: true },
       order: { sortOrder: 'ASC' },
@@ -164,13 +164,11 @@ export class CategoriasService implements OnModuleInit {
 
     const results = await Promise.all(
       mainCats.map(async (mainCat) => {
-        // CORREÇÃO: usa parentId em vez de mainCategoryId
         const subCats = await this.repo
           .createQueryBuilder('c')
           .where('c.parentId = :id OR c.id = :id', { id: mainCat.id })
           .getMany();
 
-        // Busca recursiva para pegar todos os descendentes
         const allIds = new Set<string>();
         const queue = [...subCats];
         while (queue.length > 0) {
@@ -189,7 +187,7 @@ export class CategoriasService implements OnModuleInit {
           .createQueryBuilder('f')
           .select('SUM(ABS(f.valor))', 'total')
           .addSelect('COUNT(f.id)', 'qtd')
-          .where('f.financial_category_id IN (:...ids)', { ids: subIds });
+          .where('f.financial_category_id::uuid IN (:...ids)', { ids: subIds });
 
         if (filters.startDate) qb.andWhere('f.data >= :start', { start: filters.startDate });
         if (filters.endDate)   qb.andWhere('f.data <= :end',   { end: filters.endDate });
@@ -227,4 +225,3 @@ export class CategoriasService implements OnModuleInit {
       despesas:  addPct(despesas, totalDespesas),
     };
   }
-}

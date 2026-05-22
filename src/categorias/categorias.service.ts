@@ -1,9 +1,3 @@
-const teste = await this.financeiroRepo.find();
-  console.log('LANÇAMENTOS:', JSON.stringify(teste.map(f => ({ 
-    id: f.id, 
-    descricao: f.descricao,
-    financial_category_id: f.financial_category_id 
-  }))));
 import { Injectable, OnModuleInit, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
@@ -163,6 +157,14 @@ export class CategoriasService implements OnModuleInit {
   }
 
   async getDashboard(filters: { startDate?: string; endDate?: string; fazendaId?: string; safraId?: string }) {
+    // DEBUG TEMPORÁRIO
+    const todosLancamentos = await this.financeiroRepo.find();
+    console.log('TOTAL LANÇAMENTOS:', todosLancamentos.length);
+    console.log('COM CATEGORIA:', todosLancamentos.filter(f => f.financial_category_id).length);
+    todosLancamentos.forEach(f => {
+      console.log(`  - ${f.descricao}: financial_category_id=${f.financial_category_id}`);
+    });
+
     const mainCats = await this.repo.find({
       where: { level: 2, active: true },
       order: { sortOrder: 'ASC' },

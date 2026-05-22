@@ -29,8 +29,8 @@ export class Financeiro {
 @Column({ nullable: true })
 categoria: string;
 
-@Column({ nullable: true })
-categoriaId: string;
+@Column({ nullable: true, name: 'financial_category_id' })
+financial_category_id: string;
 
 @Column({ nullable: true })
 dataVencimento: Date;

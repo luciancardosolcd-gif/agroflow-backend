@@ -26,12 +26,14 @@ export class Financeiro {
   })
   tipo: TipoLancamento;
 
-  @Column({ nullable: true })
-  categoria: string;
+@Column({ nullable: true })
+categoria: string;
 
-  @Column({ nullable: true })
-  dataVencimento: Date;
+@Column({ nullable: true })
+categoriaId: string;
 
+@Column({ nullable: true })
+dataVencimento: Date;
   // Data do lançamento (usada nas queries do dashboard)
   @Column({ type: 'date', default: () => 'CURRENT_DATE' })
   data: Date;

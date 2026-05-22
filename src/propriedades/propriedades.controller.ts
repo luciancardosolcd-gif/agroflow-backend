@@ -15,4 +15,36 @@ import { PropriedadesService } from './propriedades.service';
 
 @ApiTags('Propriedades')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), Roles
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Controller('propriedades')
+export class PropriedadesController {
+  constructor(private service: PropriedadesService) {}
+
+  @Get()
+  findAll() {
+    return this.service.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.service.findOne(id);
+  }
+
+  @Post()
+  @Roles('admin', 'gestor')
+  create(@Body() data: any) {
+    return this.service.create(data);
+  }
+
+  @Put(':id')
+  @Roles('admin', 'gestor')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.service.update(id, data);
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
+  }
+}

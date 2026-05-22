@@ -28,4 +28,11 @@ export class PropriedadesService {
   async update(id: string, data: Partial<Propriedade>) {
     const prop = await this.findOne(id);
     const updated = this.repo.merge(prop, data);
-    return
+    return this.repo.save(updated);
+  }
+
+  async remove(id: string) {
+    const prop = await this.findOne(id);
+    return this.repo.remove(prop);
+  }
+}

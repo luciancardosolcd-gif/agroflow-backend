@@ -1,3 +1,9 @@
+const teste = await this.financeiroRepo.find();
+  console.log('LANÇAMENTOS:', JSON.stringify(teste.map(f => ({ 
+    id: f.id, 
+    descricao: f.descricao,
+    financial_category_id: f.financial_category_id 
+  }))));
 import { Injectable, OnModuleInit, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';

@@ -12,6 +12,8 @@ import { FornecedoresModule } from './fornecedores/fornecedores.module';
 import { MaquinariosModule } from './maquinarios/maquinarios.module';
 import { DocumentosModule } from './documentos/documentos.module';
 import { CategoriasModule } from './categorias/categorias.module';
+import { PropriedadesModule } from './propriedades/propriedades.module';
+import { SafrasModule } from './safras/safras.module';
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { CategoriasModule } from './categorias/categorias.module';
     MaquinariosModule,
     DocumentosModule,
     CategoriasModule,
+    PropriedadesModule,
+    SafrasModule,
   ],
 })
 export class AppModule {}

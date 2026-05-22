@@ -157,14 +157,6 @@ export class CategoriasService implements OnModuleInit {
   }
 
   async getDashboard(filters: { startDate?: string; endDate?: string; fazendaId?: string; safraId?: string }) {
-    // DEBUG TEMPORÁRIO
-    const todosLancamentos = await this.financeiroRepo.find();
-    console.log('TOTAL LANÇAMENTOS:', todosLancamentos.length);
-    console.log('COM CATEGORIA:', todosLancamentos.filter(f => f.financial_category_id).length);
-    todosLancamentos.forEach(f => {
-      console.log(`  - ${f.descricao}: financial_category_id=${f.financial_category_id}`);
-    });
-
     const mainCats = await this.repo.find({
       where: { level: 2, active: true },
       order: { sortOrder: 'ASC' },
@@ -172,18 +164,32 @@ export class CategoriasService implements OnModuleInit {
 
     const results = await Promise.all(
       mainCats.map(async (mainCat) => {
+        // CORREÇÃO: usa parentId em vez de mainCategoryId
         const subCats = await this.repo
           .createQueryBuilder('c')
-          .where('c.mainCategoryId = :id OR c.id = :id', { id: mainCat.id })
+          .where('c.parentId = :id OR c.id = :id', { id: mainCat.id })
           .getMany();
 
-        const subIds = subCats.map((s) => s.id);
+        // Busca recursiva para pegar todos os descendentes
+        const allIds = new Set<string>();
+        const queue = [...subCats];
+        while (queue.length > 0) {
+          const cat = queue.shift()!;
+          allIds.add(cat.id);
+          const children = await this.repo
+            .createQueryBuilder('c')
+            .where('c.parentId = :id', { id: cat.id })
+            .getMany();
+          queue.push(...children);
+        }
+
+        const subIds = allIds.size > 0 ? Array.from(allIds) : ['00000000-0000-0000-0000-000000000000'];
 
         const qb = this.financeiroRepo
           .createQueryBuilder('f')
           .select('SUM(ABS(f.valor))', 'total')
           .addSelect('COUNT(f.id)', 'qtd')
-          .where('f.financial_category_id IN (:...ids)', { ids: subIds.length ? subIds : ['0'] });
+          .where('f.financial_category_id IN (:...ids)', { ids: subIds });
 
         if (filters.startDate) qb.andWhere('f.data >= :start', { start: filters.startDate });
         if (filters.endDate)   qb.andWhere('f.data <= :end',   { end: filters.endDate });

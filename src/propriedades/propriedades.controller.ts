@@ -21,14 +21,12 @@ export class PropriedadesController {
     private usersRepo: Repository<User>,
   ) {}
 
-  @Get()
+ @Get()
 async findAll(@Request() req: any) {
-  console.log('USER TOKEN:', JSON.stringify(req.user));
-  const user = await this.usersRepo.findOne({ where: { id: req.user.sub } });
-  console.log('USER DB:', JSON.stringify(user));
+  const userId = req.user.sub || req.user.userId;
+  const user = await this.usersRepo.findOne({ where: { id: userId } });
   return this.service.findAll(user?.tenantId, user?.email);
 }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);

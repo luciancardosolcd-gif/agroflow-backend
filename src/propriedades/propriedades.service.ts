@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Propriedade } from './propriedade.entity';
 
+const ADMIN_PRINCIPAL_EMAIL = 'luciancardoso@agroflow.com';
+
 @Injectable()
 export class PropriedadesService {
   constructor(
@@ -10,17 +12,17 @@ export class PropriedadesService {
     private readonly repo: Repository<Propriedade>,
   ) {}
 
-  findAll(tenantId?: string, isAdmin?: boolean) {
-    if (!tenantId || isAdmin) {
+  findAll(tenantId?: string, userEmail?: string) {
+    if (userEmail === ADMIN_PRINCIPAL_EMAIL) {
       return this.repo.find({ order: { nome: 'ASC' } });
     }
-    return this.repo.find({
-      where: [
-        { tenantId },
-        { tenantId: null },
-      ],
-      order: { nome: 'ASC' },
-    });
+    if (tenantId) {
+      return this.repo.find({
+        where: { tenantId },
+        order: { nome: 'ASC' },
+      });
+    }
+    return this.repo.find({ order: { nome: 'ASC' } });
   }
 
   async findOne(id: string) {

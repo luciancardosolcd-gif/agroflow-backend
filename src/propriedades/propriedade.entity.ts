@@ -36,6 +36,9 @@ export class Propriedade {
   @Column({ default: true })
   ativa: boolean;
 
+  @Column({ nullable: true })
+ tenantId: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -221,7 +221,8 @@ export class CategoriasService implements OnModuleInit {
         lucroLiquido: lucro,
         margemLiquida: totalReceitas > 0 ? parseFloat(((lucro / totalReceitas) * 100).toFixed(2)) : 0,
       },
-      receitas:  addPct(receitas, totalReceitas),
+    receitas:  addPct(receitas, totalReceitas),
       despesas:  addPct(despesas, totalDespesas),
     };
   }
+}

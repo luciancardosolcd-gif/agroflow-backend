@@ -1,13 +1,6 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  UseGuards,
-  Request,
+  Controller, Get, Post, Put, Delete,
+  Body, Param, UseGuards, Request,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -16,8 +9,6 @@ import { PropriedadesService } from './propriedades.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/user.entity';
-
-const ADMIN_PRINCIPAL = 'luciancardoso@agroflow.com';
 
 @ApiTags('Propriedades')
 @ApiBearerAuth()
@@ -33,8 +24,7 @@ export class PropriedadesController {
   @Get()
   async findAll(@Request() req: any) {
     const user = await this.usersRepo.findOne({ where: { id: req.user.sub } });
-    const isAdminPrincipal = user?.email === ADMIN_PRINCIPAL;
-    return this.service.findAll(user?.tenantId, isAdminPrincipal);
+    return this.service.findAll(user?.tenantId, user?.email);
   }
 
   @Get(':id')

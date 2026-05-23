@@ -3,9 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Propriedade } from './propriedade.entity';
 import { PropriedadesService } from './propriedades.service';
 import { PropriedadesController } from './propriedades.controller';
+import { User } from '../users/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Propriedade])],
+  imports: [TypeOrmModule.forFeature([Propriedade, User])],
   controllers: [PropriedadesController],
   providers: [PropriedadesService],
   exports: [PropriedadesService],

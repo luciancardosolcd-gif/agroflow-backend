@@ -10,8 +10,17 @@ export class PropriedadesService {
     private readonly repo: Repository<Propriedade>,
   ) {}
 
-  findAll() {
-    return this.repo.find({ order: { nome: 'ASC' } });
+  findAll(tenantId?: string, isAdmin?: boolean) {
+    if (!tenantId || isAdmin) {
+      return this.repo.find({ order: { nome: 'ASC' } });
+    }
+    return this.repo.find({
+      where: [
+        { tenantId },
+        { tenantId: null },
+      ],
+      order: { nome: 'ASC' },
+    });
   }
 
   async findOne(id: string) {

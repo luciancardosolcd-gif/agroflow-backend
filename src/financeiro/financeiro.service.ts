@@ -12,18 +12,18 @@ export class FinanceiroService {
     private repo: Repository<Financeiro>
   ) {}
 
-  findAll(fazendaId?: string, userEmail?: string) {
-    if (userEmail && ACESSO_TOTAL.includes(userEmail)) {
-      return this.repo.find({ order: { data: 'DESC' } });
-    }
-    if (fazendaId) {
-      return this.repo.find({
-        where: { fazendaId },
-        order: { data: 'DESC' },
-      });
-    }
+ findAll(fazendaId?: string, userEmail?: string) {
+  if (userEmail && ACESSO_TOTAL.includes(userEmail)) {
     return this.repo.find({ order: { data: 'DESC' } });
   }
+  if (fazendaId) {
+    return this.repo.find({
+      where: { fazendaId },
+      order: { data: 'DESC' },
+    });
+  }
+  return [];
+}
 
   findOne(id: string) {
     return this.repo.findOne({ where: { id } });

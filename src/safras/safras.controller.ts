@@ -1,29 +1,41 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
+  Controller, Get, Post, Put, Delete,
+  Body, Param, Query, UseGuards, Request,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard, Roles } from '../auth/roles.guard';
 import { SafrasService } from './safras.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/user.entity';
+import { Propriedade } from '../propriedades/propriedade.entity';
+
+const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
 
 @ApiTags('Safras')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('safras')
 export class SafrasController {
-  constructor(private service: SafrasService) {}
+  constructor(
+    private service: SafrasService,
+    @InjectRepository(User)
+    private usersRepo: Repository<User>,
+    @InjectRepository(Propriedade)
+    private propriedadesRepo: Repository<Propriedade>,
+  ) {}
 
   @Get()
-  findAll(@Query('propriedadeId') propriedadeId?: string) {
-    return this.service.findAll(propriedadeId);
+  async findAll(@Query('propriedadeId') propriedadeId?: string, @Request() req?: any) {
+    const userId = req.user.sub || req.user.userId;
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user || ACESSO_TOTAL.includes(user.email)) {
+      return this.service.findAll(propriedadeId, user?.email);
+    }
+    const props = await this.propriedadesRepo.find({ where: { tenantId: user.tenantId } });
+    const ids = props.map(p => p.id);
+    return this.service.findAll(propriedadeId, user.email, ids);
   }
 
   @Get(':id')

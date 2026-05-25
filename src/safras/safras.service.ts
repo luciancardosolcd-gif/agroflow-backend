@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Safra } from './safra.entity';
 
+const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
+
 @Injectable()
 export class SafrasService {
   constructor(
@@ -10,21 +12,25 @@ export class SafrasService {
     private readonly repo: Repository<Safra>,
   ) {}
 
-  findAll(propriedadeId?: string) {
-    const where: any = {};
-    if (propriedadeId) where.propriedadeId = propriedadeId;
-    return this.repo.find({
-      where,
-      relations: ['propriedade'],
-      order: { createdAt: 'DESC' },
-    });
+  findAll(propriedadeId?: string, userEmail?: string, propriedadeIds?: string[]) {
+    if (userEmail && ACESSO_TOTAL.includes(userEmail)) {
+      const where: any = {};
+      if (propriedadeId) where.propriedadeId = propriedadeId;
+      return this.repo.find({ where, relations: ['propriedade'], order: { createdAt: 'DESC' } });
+    }
+    if (propriedadeIds && propriedadeIds.length > 0) {
+      return this.repo
+        .createQueryBuilder('s')
+        .leftJoinAndSelect('s.propriedade', 'propriedade')
+        .where('s.propriedadeId IN (:...ids)', { ids: propriedadeIds })
+        .orderBy('s.createdAt', 'DESC')
+        .getMany();
+    }
+    return [];
   }
 
   async findOne(id: string) {
-    const safra = await this.repo.findOne({
-      where: { id },
-      relations: ['propriedade'],
-    });
+    const safra = await this.repo.findOne({ where: { id }, relations: ['propriedade'] });
     if (!safra) throw new NotFoundException('Safra não encontrada');
     return safra;
   }

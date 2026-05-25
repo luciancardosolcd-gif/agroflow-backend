@@ -5,11 +5,8 @@ import { Financeiro } from '../financeiro/financeiro.entity';
 import { CategoriasService } from './categorias.service';
 import { CategoriasController } from './categorias.controller';
 import { RolesGuard } from '../auth/roles.guard';
+import { User } from '../users/user.entity';
+import { Propriedade } from '../propriedades/propriedade.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([FinancialCategory, Financeiro])],
-  controllers: [CategoriasController],
-  providers: [CategoriasService, RolesGuard],
-  exports: [CategoriasService],
-})
-export class CategoriasModule {}
+  imports: [TypeOrmModule.forFeature([FinancialCategory, Financeiro, User, Propriedade])],

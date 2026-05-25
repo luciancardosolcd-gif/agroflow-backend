@@ -10,3 +10,8 @@ import { Propriedade } from '../propriedades/propriedade.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([FinancialCategory, Financeiro, User, Propriedade])],
+  controllers: [CategoriasController],
+  providers: [CategoriasService, RolesGuard],
+  exports: [CategoriasService],
+})
+export class CategoriasModule {}

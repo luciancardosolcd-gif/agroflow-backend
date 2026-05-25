@@ -1,20 +1,35 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { UsersService } from './users.service';
 import { RolesGuard, Roles } from '../auth/roles.guard';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './user.entity';
 import * as bcrypt from 'bcryptjs';
+
+const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
 
 @ApiTags('Usuarios')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('users')
 export class UsersController {
-  constructor(private service: UsersService) {}
+  constructor(
+    private service: UsersService,
+    @InjectRepository(User)
+    private usersRepo: Repository<User>,
+  ) {}
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  async findAll(@Request() req: any) {
+    const userId = req.user.sub || req.user.userId;
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user || ACESSO_TOTAL.includes(user.email)) {
+      return this.service.findAll();
+    }
+    // admin comum vê apenas usuários do mesmo tenant
+    return this.usersRepo.find({ where: { tenantId: user.tenantId } });
   }
 
   @Get(':id')
@@ -24,16 +39,22 @@ export class UsersController {
 
   @Post()
   @Roles('admin')
-  async create(@Body() body: any) {
+  async create(@Body() body: any, @Request() req: any) {
+    const userId = req.user.sub || req.user.userId;
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
     const senha = body.senha || 'Agroflow@2026';
     const hash = await bcrypt.hash(senha, 10);
-    const obj = {
+    const obj: any = {
       nome: body.nome,
       email: body.email,
       senhaHash: hash,
       perfil: body.perfil || 'operador',
       status: body.status || 'ativo',
     };
+    // herda o tenantId do admin que criou (exceto acesso total)
+    if (user && !ACESSO_TOTAL.includes(user.email)) {
+      obj.tenantId = user.tenantId;
+    }
     return this.service.create(obj);
   }
 

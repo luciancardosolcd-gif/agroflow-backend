@@ -30,17 +30,24 @@ export class CategoriasController {
   buscar(@Query('q') termo: string) {
     return this.service.buscar(termo ?? '');
   }
-
-  @Get('resumo-dashboard')
-  @ApiOperation({ summary: 'Dashboard consolidado por categoria principal' })
-  resumoDashboard(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('fazendaId') fazendaId?: string,
-    @Query('safraId') safraId?: string,
-  ) {
-    return this.service.getDashboard({ startDate, endDate, fazendaId, safraId });
+@Get('resumo-dashboard')
+@ApiOperation({ summary: 'Dashboard consolidado por categoria principal' })
+async resumoDashboard(
+  @Query('startDate') startDate?: string,
+  @Query('endDate') endDate?: string,
+  @Query('fazendaId') fazendaId?: string,
+  @Query('safraId') safraId?: string,
+  @Request() req?: any,
+) {
+  const userId = req.user.sub || req.user.userId;
+  const user = await this.usersRepo.findOne({ where: { id: userId } });
+  const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
+  if (user && !ACESSO_TOTAL.includes(user.email) && user.tenantId) {
+    const prop = await this.propriedadesRepo.findOne({ where: { tenantId: user.tenantId } });
+    fazendaId = prop?.id || 'none';
   }
+  return this.service.getDashboard({ startDate, endDate, fazendaId, safraId });
+}
 
   @Get(':id')
   @ApiOperation({ summary: 'Busca categoria por ID' })

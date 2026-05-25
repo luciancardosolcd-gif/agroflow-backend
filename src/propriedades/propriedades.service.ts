@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Propriedade } from './propriedade.entity';
 
-const ADMIN_PRINCIPAL_EMAIL = 'luciancardoso@agroflow.com';
+const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
 
 @Injectable()
 export class PropriedadesService {
@@ -13,7 +13,7 @@ export class PropriedadesService {
   ) {}
 
   findAll(tenantId?: string, userEmail?: string) {
-    if (userEmail === ADMIN_PRINCIPAL_EMAIL) {
+    if (userEmail && ACESSO_TOTAL.includes(userEmail)) {
       return this.repo.find({ order: { nome: 'ASC' } });
     }
     if (tenantId) {

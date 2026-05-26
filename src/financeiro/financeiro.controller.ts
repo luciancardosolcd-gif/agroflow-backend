@@ -23,19 +23,16 @@ export class FinanceiroController {
   ) {}
 
   @Get()
-async findAll(@Request() req: any) {
-  const userId = req.user.sub || req.user.userId;
-  const user = await this.usersRepo.findOne({ where: { id: userId } });
-  console.log('FINANCEIRO USER:', user?.email, 'tenantId:', user?.tenantId);
-  let fazendaId: string | undefined;
-  if (user?.tenantId) {
-    const prop = await this.propriedadesRepo.findOne({ where: { tenantId: user.tenantId } });
-    console.log('FINANCEIRO PROP:', prop?.nome, 'fazendaId:', prop?.id);
-    fazendaId = prop?.id;
+  async findAll(@Request() req: any) {
+    const userId = req.user.sub || req.user.userId;
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    let fazendaId: string | undefined;
+    if (user?.tenantId) {
+      const prop = await this.propriedadesRepo.findOne({ where: { tenantId: user.tenantId } });
+      fazendaId = prop?.id;
+    }
+    return this.service.findAll(fazendaId, user?.email);
   }
-  console.log('FINANCEIRO FILTER fazendaId:', fazendaId);
-  return this.service.findAll(fazendaId, user?.email);
-}
 
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -46,25 +43,26 @@ async findAll(@Request() req: any) {
   }
 
   @Post()
-@Roles('admin', 'gestor')
-@UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
-@RequirePermission('financeiro', 'criar')
-create(@Body() data: any) {
-  return this.service.create(data);
-}
+  @Roles('admin', 'gestor')
+  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
+  @RequirePermission('financeiro', 'criar')
+  create(@Body() data: any) {
+    return this.service.create(data);
+  }
 
-@Put(':id')
-@Roles('admin', 'gestor')
-@UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
-@RequirePermission('financeiro', 'editar')
-update(@Param('id') id: string, @Body() data: any) {
-  return this.service.update(id, data);
-}
+  @Put(':id')
+  @Roles('admin', 'gestor')
+  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
+  @RequirePermission('financeiro', 'editar')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.service.update(id, data);
+  }
 
-@Delete(':id')
-@Roles('admin')
-@UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
-@RequirePermission('financeiro', 'deletar')
-remove(@Param('id') id: string) {
-  return this.service.remove(id);
+  @Delete(':id')
+  @Roles('admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
+  @RequirePermission('financeiro', 'deletar')
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
+  }
 }

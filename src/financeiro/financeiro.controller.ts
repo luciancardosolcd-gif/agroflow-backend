@@ -65,4 +65,4 @@ export class FinanceiroController {
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
-}
+} 

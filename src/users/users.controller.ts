@@ -55,8 +55,7 @@ export class UsersController {
     }
     return this.service.create(obj);
   }
-
-  @Put(':id')
+@Put(':id')
   @Roles('admin')
   async update(@Param('id') id: string, @Body() data: any) {
     if (data.senha) {
@@ -72,9 +71,10 @@ export class UsersController {
     }
     return this.service.update(id, data);
   }
+
   @Delete(':id')
   @Roles('admin')
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
-}
+ 

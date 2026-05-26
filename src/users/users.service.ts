@@ -29,6 +29,13 @@ export class UsersService {
     return this.repo.save(merged);
   }
 
+  async updatePermissions(id: string, permissoes: Record<string, any>) {
+    const user = await this.repo.findOne({ where: { id } });
+    if (!user) throw new Error('Usuário não encontrado');
+    user.permissoes = permissoes;
+    return this.repo.save(user);
+  }
+
   remove(id: string) {
     return this.repo.delete(id);
   }

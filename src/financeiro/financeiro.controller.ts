@@ -57,6 +57,11 @@ export class FinanceiroController {
   update(@Param('id') id: string, @Body() data: any) {
     return this.service.update(id, data);
   }
+  @Put(':id/permissions')
+@Roles('admin')
+async updatePermissions(@Param('id') id: string, @Body() body: any) {
+  return this.service.updatePermissions(id, body.permissoes);
+}
 
   @Delete(':id')
   @Roles('admin')

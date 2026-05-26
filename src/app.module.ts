@@ -14,6 +14,7 @@ import { DocumentosModule } from './documentos/documentos.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { PropriedadesModule } from './propriedades/propriedades.module';
 import { SafrasModule } from './safras/safras.module';
+import { LogsModule } from './logs/logs.module';
 
 @Module({
   imports: [

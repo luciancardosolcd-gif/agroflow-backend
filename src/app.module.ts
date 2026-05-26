@@ -45,7 +45,7 @@ import { LogsModule } from './logs/logs.module';
     CategoriasModule,
     PropriedadesModule,
     SafrasModule,
+    LogsModule,
   ],
 })
-// force rebuild v2
 export class AppModule {}

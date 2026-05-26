@@ -25,6 +25,9 @@ export class UsersService {
   async update(id: string, data: Partial<User>) {
     const user = await this.repo.findOne({ where: { id } });
     if (!user) throw new Error('Usuário não encontrado');
+    if (data.permissoes !== undefined) {
+      user.permissoes = data.permissoes;
+    }
     const merged = this.repo.merge(user, data);
     return this.repo.save(merged);
   }

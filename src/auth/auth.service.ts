@@ -20,7 +20,6 @@ export class AuthService {
   async login(email: string, senha: string, ip?: string) {
     const user = await this.usersRepo.findOne({ where: { email: email.toLowerCase() } });
     if (!user || !(await bcrypt.compare(senha, user.senhaHash))) {
-      // Log tentativa falha
       await this.logsService.registrar({
         userEmail: email,
         acao: 'LOGIN_FALHOU',
@@ -33,7 +32,6 @@ export class AuthService {
     if (user.status !== 'ativo')
       throw new UnauthorizedException('Usuário inativo');
 
-    // Log login bem sucedido
     await this.logsService.registrar({
       userId: user.id,
       userEmail: user.email,
@@ -48,6 +46,7 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, perfil: user.perfil };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '8h' });
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d', secret: SECRET });
+
     return {
       accessToken,
       refreshToken,
@@ -56,6 +55,7 @@ export class AuthService {
         nome: user.nome,
         email: user.email,
         perfil: user.perfil,
+        permissoes: user.permissoes || null,
       },
     };
   }

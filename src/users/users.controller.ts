@@ -18,7 +18,7 @@ export class UsersController {
   constructor(
     private service: UsersService,
     @InjectRepository(User)
-    private usersRepo: Repository<User>,
+    private usersRepo: Repository<User>, 
   ) {}
 
   @Get()

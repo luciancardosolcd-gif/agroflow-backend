@@ -4,9 +4,10 @@ import { Cliente } from './cliente.entity';
 import { ClientesService } from './clientes.service';
 import { ClientesController } from './clientes.controller';
 import { PermissionsGuard } from '../auth/permissions.guard';
+import { User } from '../users/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Cliente])],
+  imports: [TypeOrmModule.forFeature([Cliente, User])],
   controllers: [ClientesController],
   providers: [ClientesService, PermissionsGuard],
   exports: [ClientesService],

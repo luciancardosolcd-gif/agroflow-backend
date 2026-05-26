@@ -6,8 +6,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { User } from '../users/user.entity';
+import { LogsModule } from '../logs/logs.module';
 
 const JWT_SECRET = process.env.JWT_SECRET || '1b188fff14990a2190da34907dc8d3d1e555debe7995260fb47cfcca73d63d16';
+
 @Module({
   imports: [
     PassportModule,
@@ -16,6 +18,7 @@ const JWT_SECRET = process.env.JWT_SECRET || '1b188fff14990a2190da34907dc8d3d1e5
       secret: JWT_SECRET,
       signOptions: { expiresIn: '8h' },
     }),
+    LogsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

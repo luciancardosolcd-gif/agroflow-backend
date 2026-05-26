@@ -28,7 +28,6 @@ export class UsersController {
     if (!user || ACESSO_TOTAL.includes(user.email)) {
       return this.service.findAll();
     }
-    // admin comum vê apenas usuários do mesmo tenant
     return this.usersRepo.find({ where: { tenantId: user.tenantId } });
   }
 
@@ -51,7 +50,6 @@ export class UsersController {
       perfil: body.perfil || 'operador',
       status: body.status || 'ativo',
     };
-    // herda o tenantId do admin que criou (exceto acesso total)
     if (user && !ACESSO_TOTAL.includes(user.email)) {
       obj.tenantId = user.tenantId;
     }
@@ -73,6 +71,12 @@ export class UsersController {
       delete data.dataExpiracao;
     }
     return this.service.update(id, data);
+  }
+
+  @Put(':id/permissions')
+  @Roles('admin')
+  async updatePermissions(@Param('id') id: string, @Body() body: any) {
+    return this.service.updatePermissions(id, body.permissoes);
   }
 
   @Delete(':id')

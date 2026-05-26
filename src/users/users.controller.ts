@@ -72,13 +72,6 @@ export class UsersController {
     }
     return this.service.update(id, data);
   }
-
-  @Put(':id/permissions')
-  @Roles('admin')
-  async updatePermissions(@Param('id') id: string, @Body() body: any) {
-    return this.service.updatePermissions(id, body.permissoes);
-  } 
-
   @Delete(':id')
   @Roles('admin')
   remove(@Param('id') id: string) {

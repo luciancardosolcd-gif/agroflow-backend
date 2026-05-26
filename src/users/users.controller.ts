@@ -18,7 +18,7 @@ export class UsersController {
   constructor(
     private service: UsersService,
     @InjectRepository(User)
-    private usersRepo: Repository<User>, 
+    private usersRepo: Repository<User>,
   ) {}
 
   @Get()
@@ -61,9 +61,6 @@ export class UsersController {
   async update(@Param('id') id: string, @Body() data: any) {
     if (data.senha) {
       data.senhaHash = await bcrypt.hash(data.senha, 10);
-      git add .
-git commit -m "add permissions endpoint"
-git push
       delete data.senha;
     }
     if (data.novaSenha) {

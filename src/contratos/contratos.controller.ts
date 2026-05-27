@@ -2,8 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { ContratosService } from './contratos.service';
-import { PermissionsGuard, RequirePermission } from '../auth/permissions.guard';
-import { RolesGuard } from '../auth/roles.guard';
+import { RolesGuard, Roles } from '../auth/roles.guard';
 
 @ApiTags('Contratos')
 @ApiBearerAuth()
@@ -19,17 +18,14 @@ export class ContratosController {
   findOne(@Param('id') id: string) { return this.service.findOne(id); }
 
   @Post()
-  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
-  @RequirePermission('contratos', 'criar')
+  @Roles('admin', 'gestor', 'operador')
   create(@Body() data: any) { return this.service.create(data); }
 
   @Put(':id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
-  @RequirePermission('contratos', 'editar')
+  @Roles('admin', 'gestor', 'operador')
   update(@Param('id') id: string, @Body() data: any) { return this.service.update(id, data); }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
-  @RequirePermission('contratos', 'deletar')
+  @Roles('admin')
   remove(@Param('id') id: string) { return this.service.remove(id); }
 }

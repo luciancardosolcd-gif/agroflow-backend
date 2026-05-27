@@ -7,7 +7,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Propriedade } from '../propriedades/propriedade.entity';
-import { PermissionsGuard, RequirePermission } from '../auth/permissions.guard';
 
 @ApiTags('Financeiro')
 @ApiBearerAuth()
@@ -43,31 +42,20 @@ export class FinanceiroController {
   }
 
   @Post()
-  @Roles('admin', 'gestor')
-  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
-  @RequirePermission('financeiro', 'criar')
+  @Roles('admin', 'gestor', 'operador')
   create(@Body() data: any) {
     return this.service.create(data);
   }
 
   @Put(':id')
-  @Roles('admin', 'gestor')
-  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
-  @RequirePermission('financeiro', 'editar')
+  @Roles('admin', 'gestor', 'operador')
   update(@Param('id') id: string, @Body() data: any) {
     return this.service.update(id, data);
   }
-  @Put(':id/permissions')
-@Roles('admin')
-async updatePermissions(@Param('id') id: string, @Body() body: any) {
-  return this.service.updatePermissions(id, body.permissoes);
-}
 
   @Delete(':id')
   @Roles('admin')
-  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
-  @RequirePermission('financeiro', 'deletar')
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
-} 
+}

@@ -8,3 +8,4 @@ COPY nest-cli.json ./
 ARG CACHEBUST=2
 RUN rm -rf dist && npm run build
 CMD ["node","dist/main"]
+ 

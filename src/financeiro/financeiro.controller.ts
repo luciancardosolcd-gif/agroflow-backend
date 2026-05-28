@@ -1,4 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, NotFoundException, Request } from '@nestjs/common';
+import {
+  Controller, Get, Post, Put, Delete,
+  Body, Param, UseGuards, NotFoundException, Request
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { FinanceiroService } from './financeiro.service';
@@ -21,30 +24,41 @@ export class FinanceiroController {
     private propriedadesRepo: Repository<Propriedade>,
   ) {}
 
+  // ── helper: resolve fazendaId do usuário logado ──
+  private async getFazendaId(userId: string): Promise<string | undefined> {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user?.tenantId) return undefined;
+    const prop = await this.propriedadesRepo.findOne({
+      where: { tenantId: user.tenantId },
+    });
+    return prop?.id;
+  }
+
   @Get()
   async findAll(@Request() req: any) {
     const userId = req.user.sub || req.user.userId;
     const user = await this.usersRepo.findOne({ where: { id: userId } });
-    let fazendaId: string | undefined;
-    if (user?.tenantId) {
-      const prop = await this.propriedadesRepo.findOne({ where: { tenantId: user.tenantId } });
-      fazendaId = prop?.id;
-    }
+    const fazendaId = await this.getFazendaId(userId);
     return this.service.findAll(fazendaId, user?.email);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     if (id === 'dashboard') {
-      throw new NotFoundException('Use /financeiro/dashboard/* para acessar o dashboard');
+      throw new NotFoundException(
+        'Use /financeiro/dashboard/* para acessar o dashboard',
+      );
     }
     return this.service.findOne(id);
   }
 
   @Post()
   @Roles('admin', 'gestor', 'operador')
-  create(@Body() data: any) {
-    return this.service.create(data);
+  async create(@Body() data: any, @Request() req: any) {
+    // ✅ FIX: injeta fazendaId do usuário logado antes de salvar
+    const userId = req.user.sub || req.user.userId;
+    const fazendaId = await this.getFazendaId(userId);
+    return this.service.create({ ...data, fazendaId });
   }
 
   @Put(':id')

@@ -9,27 +9,30 @@ const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
 export class FinanceiroService {
   constructor(
     @InjectRepository(Financeiro)
-    private repo: Repository<Financeiro>
+    private repo: Repository<Financeiro>,
   ) {}
 
- findAll(fazendaId?: string, userEmail?: string) {
-  if (userEmail && ACESSO_TOTAL.includes(userEmail)) {
-    return this.repo.find({ order: { data: 'DESC' } });
+  findAll(fazendaId?: string, userEmail?: string) {
+    // Super admins veem tudo
+    if (userEmail && ACESSO_TOTAL.includes(userEmail)) {
+      return this.repo.find({ order: { data: 'DESC' } });
+    }
+    // ✅ FIX: filtra por fazendaId — agora sempre preenchido no create()
+    if (fazendaId) {
+      return this.repo.find({
+        where: { fazendaId },
+        order: { data: 'DESC' },
+      });
+    }
+    return [];
   }
-  if (fazendaId) {
-    return this.repo.find({
-      where: { fazendaId },
-      order: { data: 'DESC' },
-    });
-  }
-  return [];
-}
 
   findOne(id: string) {
     return this.repo.findOne({ where: { id } });
   }
 
   create(data: Partial<Financeiro>) {
+    // fazendaId já vem injetado pelo controller
     return this.repo.save(data);
   }
 

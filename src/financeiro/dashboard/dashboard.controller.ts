@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { User } from '../../users/user.entity';
 import { Propriedade } from '../../propriedades/propriedade.entity';
 
-const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
+const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com']; 
 
 @ApiTags('Financeiro - Dashboard')
 @ApiBearerAuth()

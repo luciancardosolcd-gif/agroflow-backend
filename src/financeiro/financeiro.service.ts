@@ -13,17 +13,19 @@ export class FinanceiroService {
   ) {}
 
   findAll(fazendaId?: string, userEmail?: string) {
-    // Super admins veem tudo
-    if (userEmail && ACESSO_TOTAL.includes(userEmail)) {
+    // ✅ Super admin SEM filtro → vê tudo
+    if (userEmail && ACESSO_TOTAL.includes(userEmail) && !fazendaId) {
       return this.repo.find({ order: { data: 'DESC' } });
     }
-    // ✅ FIX: filtra por fazendaId — agora sempre preenchido no create()
+
+    // Super admin COM filtro OU usuário comum → filtra por fazendaId
     if (fazendaId) {
       return this.repo.find({
         where: { fazendaId },
         order: { data: 'DESC' },
       });
     }
+
     return [];
   }
 
@@ -32,7 +34,6 @@ export class FinanceiroService {
   }
 
   create(data: Partial<Financeiro>) {
-    // fazendaId já vem injetado pelo controller
     return this.repo.save(data);
   }
 

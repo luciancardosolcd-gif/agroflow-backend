@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsUUID, IsDateString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsDateString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PeriodoFiltro } from '../enums/periodo-filtro.enum';
 
@@ -10,12 +10,12 @@ export class FiltroDashboardDto {
 
   @ApiPropertyOptional({ description: 'ID da fazenda para filtrar' })
   @IsOptional()
-  @IsUUID()
+  @IsString()  // ✅ era @IsUUID() — rejeitava character varying
   fazendaId?: string;
 
   @ApiPropertyOptional({ description: 'ID da safra para filtrar' })
   @IsOptional()
-  @IsUUID()
+  @IsString()  // ✅ mesmo fix
   safraId?: string;
 
   @ApiPropertyOptional({ description: 'Data início (para período PERSONALIZADO)', example: '2024-01-01' })

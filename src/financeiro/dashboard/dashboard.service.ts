@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, IsNull, Not } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Financeiro } from '../financeiro.entity';
 import { FiltroDashboardDto } from '../dto/filtro-dashboard.dto';
 import { TipoLancamento } from '../enums/tipo-lancamento.enum';
@@ -49,7 +49,6 @@ export class DashboardService {
 
     const query = this.financeiroRepository.createQueryBuilder('f');
 
-    // Inclui registros com data no período OU com data nula (createdAt no período)
     query.where(
       '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
       { dataInicio, dataFim },
@@ -69,7 +68,9 @@ export class DashboardService {
       .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const saldo = totalReceitas - totalDespesas;
-    const margemLucro = totalReceitas > 0 ? parseFloat(((saldo / totalReceitas) * 100).toFixed(2)) : 0;
+    const margemLucro = totalReceitas > 0
+      ? parseFloat(((saldo / totalReceitas) * 100).toFixed(2))
+      : 0;
 
     return { totalReceitas, totalDespesas, saldo, margemLucro };
   }
@@ -129,7 +130,9 @@ export class DashboardService {
     return Object.values(porMes);
   }
 
-  async buscarLancamentosRecentes(filtro: FiltroDashboardDto, limite = 10) {
+  // ✅ FIX: removido .take(limite) — retorna TODOS os lançamentos do período
+  // Necessário para os tabs "Contas a Pagar / Receber" calcularem totais corretos
+  async buscarLancamentosRecentes(filtro: FiltroDashboardDto) {
     const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
 
     return this.financeiroRepository
@@ -138,18 +141,26 @@ export class DashboardService {
         '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
         { dataInicio, dataFim },
       )
-      .orderBy('f.createdAt', 'DESC')
-      .take(limite)
+      .andWhere(filtro.fazendaId ? 'f.fazendaId = :fazendaId' : '1=1', 
+        filtro.fazendaId ? { fazendaId: filtro.fazendaId } : {}
+      )
+      .andWhere(filtro.safraId ? 'f.safraId = :safraId' : '1=1',
+        filtro.safraId ? { safraId: filtro.safraId } : {}
+      )
+      .orderBy('f.data', 'DESC')
+      .addOrderBy('f.createdAt', 'DESC')
       .getMany();
   }
 
   async buscarTodosDados(filtro: FiltroDashboardDto) {
-    const [resumo, despesasPorCategoria, evolucaoMensal, lancamentosRecentes] = await Promise.all([
-      this.buscarResumo(filtro),
-      this.buscarDespesasPorCategoria(filtro),
-      this.buscarEvolucaoMensal(filtro),
-      this.buscarLancamentosRecentes(filtro),
-    ]);
+    const [resumo, despesasPorCategoria, evolucaoMensal, lancamentosRecentes] =
+      await Promise.all([
+        this.buscarResumo(filtro),
+        this.buscarDespesasPorCategoria(filtro),
+        this.buscarEvolucaoMensal(filtro),
+        this.buscarLancamentosRecentes(filtro),
+      ]);
+
     return { resumo, despesasPorCategoria, evolucaoMensal, lancamentosRecentes };
   }
 }

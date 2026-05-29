@@ -26,5 +26,5 @@ export class FiltroDashboardDto {
   @ApiPropertyOptional({ description: 'Data fim (para período PERSONALIZADO)', example: '2024-12-31' })
   @IsOptional()
   @IsDateString()
-  dataFim?: string;
+  dataFim?: string; 
 }

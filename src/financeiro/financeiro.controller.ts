@@ -1,75 +1,103 @@
-import {
-  Controller, Get, Post, Put, Delete,
-  Body, Param, UseGuards, NotFoundException, Request
-} from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { FinanceiroService } from './financeiro.service';
-import { RolesGuard, Roles } from '../auth/roles.guard';
+import { DashboardService } from './dashboard.service';
+import { FiltroDashboardDto } from '../dto/filtro-dashboard.dto';
+import { RolesGuard } from '../../auth/roles.guard';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../users/user.entity';
-import { Propriedade } from '../propriedades/propriedade.entity';
+import { User } from '../../users/user.entity';
+import { Propriedade } from '../../propriedades/propriedade.entity';
 
-@ApiTags('Financeiro')
+const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
+
+@ApiTags('Financeiro - Dashboard')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Controller('financeiro')
-export class FinanceiroController {
+@Controller('fin-dashboard')
+export class DashboardController {
   constructor(
-    private service: FinanceiroService,
+    private readonly dashboardService: DashboardService,
     @InjectRepository(User)
     private usersRepo: Repository<User>,
     @InjectRepository(Propriedade)
     private propriedadesRepo: Repository<Propriedade>,
   ) {}
 
-  // ── helper: resolve fazendaId do usuário logado ──
-  private async getFazendaId(userId: string): Promise<string | undefined> {
+  /**
+   * Resolve o fazendaId correto:
+   * - Se o frontend mandou fazendaId na query → usa ele (vale para qualquer usuário)
+   * - Se não mandou E não é super admin → busca a fazenda do tenant do usuário
+   * - Se não mandou E é super admin → undefined (busca tudo)
+   */
+  private async resolveFazendaId(
+    req: any,
+    filtro: FiltroDashboardDto,
+  ): Promise<string | undefined> {
+    // ✅ FIX: frontend mandou fazendaId explícito → respeita sempre
+    if (filtro.fazendaId) return filtro.fazendaId;
+
+    const userId = req.user.sub || req.user.userId;
     const user = await this.usersRepo.findOne({ where: { id: userId } });
-    if (!user?.tenantId) return undefined;
-    const prop = await this.propriedadesRepo.findOne({
-      where: { tenantId: user.tenantId },
-    });
-    return prop?.id;
+
+    if (!user) return undefined;
+
+    // Super admin sem filtro explícito → vê tudo
+    if (ACESSO_TOTAL.includes(user.email)) return undefined;
+
+    // Usuário comum → filtra pela fazenda do seu tenant
+    if (user.tenantId) {
+      const prop = await this.propriedadesRepo.findOne({
+        where: { tenantId: user.tenantId },
+      });
+      return prop?.id ?? 'none';
+    }
+
+    return 'none';
   }
 
   @Get()
-  async findAll(@Request() req: any) {
-    const userId = req.user.sub || req.user.userId;
-    const user = await this.usersRepo.findOne({ where: { id: userId } });
-    const fazendaId = await this.getFazendaId(userId);
-    return this.service.findAll(fazendaId, user?.email);
+  async buscarTodosDados(
+    @Query() filtro: FiltroDashboardDto,
+    @Request() req: any,
+  ) {
+    filtro.fazendaId = await this.resolveFazendaId(req, filtro);
+    return this.dashboardService.buscarTodosDados(filtro);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    if (id === 'dashboard') {
-      throw new NotFoundException(
-        'Use /financeiro/dashboard/* para acessar o dashboard',
-      );
-    }
-    return this.service.findOne(id);
+  @Get('resumo')
+  async buscarResumo(
+    @Query() filtro: FiltroDashboardDto,
+    @Request() req: any,
+  ) {
+    filtro.fazendaId = await this.resolveFazendaId(req, filtro);
+    return this.dashboardService.buscarResumo(filtro);
   }
 
-  @Post()
-  @Roles('admin', 'gestor', 'operador')
-  async create(@Body() data: any, @Request() req: any) {
-    // ✅ FIX: injeta fazendaId do usuário logado antes de salvar
-    const userId = req.user.sub || req.user.userId;
-    const fazendaId = await this.getFazendaId(userId);
-    return this.service.create({ ...data, fazendaId });
+  @Get('despesas-por-categoria')
+  async buscarDespesasPorCategoria(
+    @Query() filtro: FiltroDashboardDto,
+    @Request() req: any,
+  ) {
+    filtro.fazendaId = await this.resolveFazendaId(req, filtro);
+    return this.dashboardService.buscarDespesasPorCategoria(filtro);
   }
 
-  @Put(':id')
-  @Roles('admin', 'gestor', 'operador')
-  update(@Param('id') id: string, @Body() data: any) {
-    return this.service.update(id, data);
+  @Get('evolucao-mensal')
+  async buscarEvolucaoMensal(
+    @Query() filtro: FiltroDashboardDto,
+    @Request() req: any,
+  ) {
+    filtro.fazendaId = await this.resolveFazendaId(req, filtro);
+    return this.dashboardService.buscarEvolucaoMensal(filtro);
   }
 
-  @Delete(':id')
-  @Roles('admin')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  @Get('recentes')
+  async buscarLancamentosRecentes(
+    @Query() filtro: FiltroDashboardDto,
+    @Request() req: any,
+  ) {
+    filtro.fazendaId = await this.resolveFazendaId(req, filtro);
+    return this.dashboardService.buscarLancamentosRecentes(filtro);
   }
 }

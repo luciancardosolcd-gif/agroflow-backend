@@ -37,27 +37,34 @@ export class FinanceiroController {
   }
 
   @Get()
-  async findAll(@Request() req: any, @Query('fazendaId') fazendaIdQuery?: string) {
+  async findAll(
+    @Request() req: any,
+    @Query('fazendaId') fazendaIdQuery?: string,
+  ) {
     const userId = req.user.sub || req.user.userId;
-    const user   = await this.usersRepo.findOne({ where: { id: userId } });
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
 
-    let fazendaId: string | undefined
+    let fazendaId: string | undefined;
 
     if (user && ACESSO_TOTAL.includes(user.email)) {
-      // ✅ Super admin: respeita o filtro do frontend se enviado
-      fazendaId = fazendaIdQuery || undefined
+      // Super admin: OBRIGATÓRIO ter fazendaId na query
+      // Se não veio → retorna vazio para não vazar dados entre propriedades
+      if (!fazendaIdQuery) return [];
+      fazendaId = fazendaIdQuery;
     } else {
-      // Usuário comum: sempre usa a fazenda do tenant
-      fazendaId = await this.getFazendaId(userId)
+      // Usuário comum: sempre usa a fazenda do próprio tenant
+      fazendaId = await this.getFazendaId(userId);
     }
 
-    return this.service.findAll(fazendaId, user?.email)
+    return this.service.findAll(fazendaId, user?.email);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     if (id === 'dashboard') {
-      throw new NotFoundException('Use /financeiro/dashboard/* para acessar o dashboard');
+      throw new NotFoundException(
+        'Use /financeiro/dashboard/* para acessar o dashboard',
+      );
     }
     return this.service.findOne(id);
   }
@@ -65,7 +72,7 @@ export class FinanceiroController {
   @Post()
   @Roles('admin', 'gestor', 'operador')
   async create(@Body() data: any, @Request() req: any) {
-    const userId   = req.user.sub || req.user.userId;
+    const userId = req.user.sub || req.user.userId;
     const fazendaId = await this.getFazendaId(userId);
     return this.service.create({ ...data, fazendaId });
   }

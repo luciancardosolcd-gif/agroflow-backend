@@ -3,8 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Financeiro } from './financeiro.entity';
 
-const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com']; 
-
 @Injectable()
 export class FinanceiroService {
   constructor(
@@ -12,8 +10,8 @@ export class FinanceiroService {
     private repo: Repository<Financeiro>,
   ) {}
 
-  findAll(fazendaId?: string, userEmail?: string) {
-    if (fazendaId) {
+  findAll(fazendaId?: string) {
+    if (fazendaId && fazendaId !== 'none') {
       return this.repo.find({
         where: { fazendaId },
         order: { data: 'DESC' },

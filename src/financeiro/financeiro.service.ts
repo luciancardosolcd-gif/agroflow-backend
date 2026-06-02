@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Financeiro } from './financeiro.entity';
 
-const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
+const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com']; 
 
 @Injectable()
 export class FinanceiroService {

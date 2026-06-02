@@ -13,7 +13,7 @@ export class DashboardService {
     private readonly financeiroRepository: Repository<Financeiro>,
   ) {}
 
-  private resolverPeriodo(filtro: FiltroDashboardDto): { dataInicio: Date; dataFim: Date } {
+  private resolverPeriodo(filtro: FiltroDashboardDto): { dataInicio: Date; dataFim: Date } { 
     const hoje = new Date();
     let dataInicio: Date;
     let dataFim: Date = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);

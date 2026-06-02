@@ -1,6 +1,6 @@
 {
   "name": "agroflow-backend",
-"version": "1.0.4",
+"version": "1.0.5",
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "nest build",

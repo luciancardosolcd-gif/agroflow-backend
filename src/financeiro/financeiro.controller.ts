@@ -41,21 +41,19 @@ export class FinanceiroController {
     @Request() req: any,
     @Query('fazendaId') fazendaIdQuery?: string,
   ) {
-    console.log('CONTROLLER V2 - fazendaId recebido:', fazendaIdQuery);
-
     const userId = req.user.sub || req.user.userId;
     const user = await this.usersRepo.findOne({ where: { id: userId } });
 
-    let fazendaId: string | undefined;
-
     if (user && ACESSO_TOTAL.includes(user.email)) {
-      if (!fazendaIdQuery) return [];
-      fazendaId = fazendaIdQuery;
-    } else {
-      fazendaId = await this.getFazendaId(userId);
+      // Admin sem fazenda selecionada → retorna vazio
+      if (!fazendaIdQuery || fazendaIdQuery.trim() === '') return [];
+      return this.service.findAll(fazendaIdQuery);
     }
 
-    return this.service.findAll(fazendaId, user?.email);
+    // Usuário comum → filtra pela fazenda do tenant
+    const fazendaId = await this.getFazendaId(userId);
+    if (!fazendaId) return [];
+    return this.service.findAll(fazendaId);
   }
 
   @Get(':id')

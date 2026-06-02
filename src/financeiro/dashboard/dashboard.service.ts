@@ -45,6 +45,8 @@ export class DashboardService {
   }
 
   async buscarResumo(filtro: FiltroDashboardDto) {
+    if (!filtro.fazendaId) return { totalReceitas: 0, totalDespesas: 0, saldo: 0, margemLucro: 0 };
+
     const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
 
     const query = this.financeiroRepository.createQueryBuilder('f');
@@ -54,7 +56,7 @@ export class DashboardService {
       { dataInicio, dataFim },
     );
 
-    if (filtro.fazendaId) query.andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId });
+    query.andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId });
     if (filtro.safraId) query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
 
     const lancamentos = await query.getMany();
@@ -76,6 +78,8 @@ export class DashboardService {
   }
 
   async buscarDespesasPorCategoria(filtro: FiltroDashboardDto) {
+    if (!filtro.fazendaId) return [];
+
     const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
 
     const query = this.financeiroRepository
@@ -87,10 +91,10 @@ export class DashboardService {
         '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
         { dataInicio, dataFim },
       )
+      .andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId })
       .groupBy('f.categoria')
       .orderBy('total', 'DESC');
 
-    if (filtro.fazendaId) query.andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId });
     if (filtro.safraId) query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
 
     const resultado = await query.getRawMany();
@@ -101,6 +105,8 @@ export class DashboardService {
   }
 
   async buscarEvolucaoMensal(filtro: FiltroDashboardDto) {
+    if (!filtro.fazendaId) return [];
+
     const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
 
     const query = this.financeiroRepository
@@ -112,10 +118,10 @@ export class DashboardService {
         '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
         { dataInicio, dataFim },
       )
+      .andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId })
       .groupBy("TO_CHAR(COALESCE(f.data, f.createdAt), 'YYYY-MM'), f.tipo")
       .orderBy("TO_CHAR(COALESCE(f.data, f.createdAt), 'YYYY-MM')", 'ASC');
 
-    if (filtro.fazendaId) query.andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId });
     if (filtro.safraId) query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
 
     const rows = await query.getRawMany();
@@ -130,28 +136,25 @@ export class DashboardService {
     return Object.values(porMes);
   }
 
-  // ✅ FIX: removido .take(limite) — retorna TODOS os lançamentos do período
-  // Necessário para os tabs "Contas a Pagar / Receber" calcularem totais corretos
   async buscarLancamentosRecentes(filtro: FiltroDashboardDto) {
-  // ✅ Se não tem fazendaId, retorna vazio
-  if (!filtro.fazendaId) return [];
+    if (!filtro.fazendaId) return [];
 
-  const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
+    const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
 
-  return this.financeiroRepository
-    .createQueryBuilder('f')
-    .where(
-      '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
-      { dataInicio, dataFim },
-    )
-    .andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId })
-    .andWhere(filtro.safraId ? 'f.safraId = :safraId' : '1=1',
-      filtro.safraId ? { safraId: filtro.safraId } : {}
-    )
-    .orderBy('f.data', 'DESC')
-    .addOrderBy('f.createdAt', 'DESC')
-    .getMany();
-}
+    return this.financeiroRepository
+      .createQueryBuilder('f')
+      .where(
+        '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
+        { dataInicio, dataFim },
+      )
+      .andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId })
+      .andWhere(filtro.safraId ? 'f.safraId = :safraId' : '1=1',
+        filtro.safraId ? { safraId: filtro.safraId } : {}
+      )
+      .orderBy('f.data', 'DESC')
+      .addOrderBy('f.createdAt', 'DESC')
+      .getMany();
+  }
 
   async buscarTodosDados(filtro: FiltroDashboardDto) {
     const [resumo, despesasPorCategoria, evolucaoMensal, lancamentosRecentes] =

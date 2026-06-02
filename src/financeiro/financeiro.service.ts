@@ -13,30 +13,12 @@ export class FinanceiroService {
   ) {}
 
   findAll(fazendaId?: string, userEmail?: string) {
-    // Super admin COM fazendaId → filtra pela fazenda enviada
-    if (userEmail && ACESSO_TOTAL.includes(userEmail) && fazendaId) {
-      return this.repo.find({
-        where: { fazendaId },
-        order: { data: 'DESC' },
-      });
-    }
-
-    // Super admin SEM fazendaId → retorna vazio (segurança)
-    // O controller já faz return [] antes de chegar aqui,
-    // mas mantemos aqui como segunda barreira
-    if (userEmail && ACESSO_TOTAL.includes(userEmail) && !fazendaId) {
-      return [];
-    }
-
-    // Usuário comum COM fazendaId → filtra pela fazenda do tenant
     if (fazendaId) {
       return this.repo.find({
         where: { fazendaId },
         order: { data: 'DESC' },
       });
     }
-
-    // Sem fazendaId e sem email reconhecido → retorna vazio por segurança
     return [];
   }
 

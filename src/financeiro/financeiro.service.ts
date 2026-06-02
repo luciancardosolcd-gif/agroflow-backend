@@ -10,6 +10,7 @@ export class FinanceiroService {
     private repo: Repository<Financeiro>,
   ) {}
 
+  // v2
   findAll(fazendaId?: string) {
     if (fazendaId && fazendaId !== 'none') {
       return this.repo.find({

@@ -45,12 +45,20 @@ export class FinanceiroController {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
 
     if (user && ACESSO_TOTAL.includes(user.email)) {
-      // Admin sem fazenda selecionada → retorna vazio
-      if (!fazendaIdQuery || fazendaIdQuery.trim() === '') return [];
-      return this.service.findAll(fazendaIdQuery);
+      // Admin com fazenda selecionada → filtra por ela
+      if (fazendaIdQuery && fazendaIdQuery.trim() !== '') {
+        return this.service.findAll(fazendaIdQuery.trim());
+      }
+      // Admin sem fazenda selecionada → retorna TODOS os lançamentos
+      return this.service.findAllWithoutFilter();
     }
 
     // Usuário comum → filtra pela fazenda do tenant
+    // Se veio fazendaId na query, usa ele (mais específico)
+    if (fazendaIdQuery && fazendaIdQuery.trim() !== '') {
+      return this.service.findAll(fazendaIdQuery.trim());
+    }
+
     const fazendaId = await this.getFazendaId(userId);
     if (!fazendaId) return [];
     return this.service.findAll(fazendaId);
@@ -70,7 +78,14 @@ export class FinanceiroController {
   @Roles('admin', 'gestor', 'operador')
   async create(@Body() data: any, @Request() req: any) {
     const userId = req.user.sub || req.user.userId;
-    const fazendaId = await this.getFazendaId(userId);
+
+    // Se o body já traz fazendaId (selecionado no frontend), usa ele
+    // Caso contrário, pega pelo tenant do usuário
+    let fazendaId = data.fazendaId;
+    if (!fazendaId) {
+      fazendaId = await this.getFazendaId(userId);
+    }
+
     return this.service.create({ ...data, fazendaId });
   }
 

@@ -10,7 +10,7 @@ export class FinanceiroService {
     private repo: Repository<Financeiro>,
   ) {}
 
-  // v2
+  // Filtra por fazenda específica
   findAll(fazendaId?: string) {
     if (fazendaId && fazendaId !== 'none') {
       return this.repo.find({
@@ -19,6 +19,13 @@ export class FinanceiroService {
       });
     }
     return [];
+  }
+
+  // Retorna todos (para admin sem filtro)
+  findAllWithoutFilter() {
+    return this.repo.find({
+      order: { data: 'DESC' },
+    });
   }
 
   findOne(id: string) {

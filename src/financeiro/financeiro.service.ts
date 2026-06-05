@@ -10,22 +10,24 @@ export class FinanceiroService {
     private repo: Repository<Financeiro>,
   ) {}
 
-  // Filtra por fazenda específica
+  // Filtra por fazenda específica usando query builder (evita problema de case-sensitivity do TypeORM)
   findAll(fazendaId?: string) {
     if (fazendaId && fazendaId !== 'none') {
-      return this.repo.find({
-        where: { fazendaId },
-        order: { data: 'DESC' },
-      });
+      return this.repo
+        .createQueryBuilder('f')
+        .where('f."fazendaId" = :fazendaId', { fazendaId })
+        .orderBy('f.data', 'DESC')
+        .getMany();
     }
     return [];
   }
 
   // Retorna todos (para admin sem filtro)
   findAllWithoutFilter() {
-    return this.repo.find({
-      order: { data: 'DESC' },
-    });
+    return this.repo
+      .createQueryBuilder('f')
+      .orderBy('f.data', 'DESC')
+      .getMany();
   }
 
   findOne(id: string) {

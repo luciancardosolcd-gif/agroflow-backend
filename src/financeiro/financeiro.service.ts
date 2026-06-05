@@ -10,7 +10,7 @@ export class FinanceiroService {
     private repo: Repository<Financeiro>,
   ) {}
 
-  // Filtra por fazenda específica usando query builder (evita problema de case-sensitivity do TypeORM)
+  // Filtra por fazenda específica usando query builder (evita problema de case-sensitivity do TypeORM) 
   findAll(fazendaId?: string) {
     if (fazendaId && fazendaId !== 'none') {
       return this.repo

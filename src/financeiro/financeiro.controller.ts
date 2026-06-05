@@ -37,21 +37,20 @@ export class FinanceiroController {
   }
 
   @Get()
-  async findAll(
-    @Request() req: any,
-    @Query('fazendaId') fazendaIdQuery?: string,
-  ) {
-    const userId = req.user.sub || req.user.userId;
-    const user = await this.usersRepo.findOne({ where: { id: userId } });
-
-    if (user && ACESSO_TOTAL.includes(user.email)) {
-      // Admin com fazenda selecionada → filtra por ela
-      if (fazendaIdQuery && fazendaIdQuery.trim() !== '') {
-        return this.service.findAll(fazendaIdQuery.trim());
-      }
-      // Admin sem fazenda selecionada → retorna TODOS os lançamentos
-      return this.service.findAllWithoutFilter();
+async findAll(
+  @Request() req: any,
+  @Query('fazendaId') fazendaIdQuery?: string,
+) {
+  console.log('fazendaIdQuery recebido:', fazendaIdQuery);
+  const userId = req.user.sub || req.user.userId;
+  const user = await this.usersRepo.findOne({ where: { id: userId } });
+  if (user && ACESSO_TOTAL.includes(user.email)) {
+    console.log('Admin detectado, fazendaId:', fazendaIdQuery);
+    if (fazendaIdQuery && fazendaIdQuery.trim() !== '') {
+      return this.service.findAll(fazendaIdQuery.trim());
     }
+    return this.service.findAllWithoutFilter();
+  }
 
     // Usuário comum → filtra pela fazenda do tenant
     // Se veio fazendaId na query, usa ele (mais específico)

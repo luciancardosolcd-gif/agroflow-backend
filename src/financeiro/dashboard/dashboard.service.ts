@@ -13,58 +13,62 @@ export class DashboardService {
     private readonly financeiroRepository: Repository<Financeiro>,
   ) {}
 
-  private resolverPeriodo(filtro: FiltroDashboardDto): { dataInicio: Date; dataFim: Date } {
+  private resolverPeriodo(filtro: FiltroDashboardDto): { dataInicio: string; dataFim: string } {
     const hoje = new Date();
     let dataInicio: Date;
-    let dataFim: Date = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);
+    let dataFim: Date;
 
     switch (filtro.periodo) {
       case PeriodoFiltro.MES_ATUAL:
         dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        dataFim    = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
         break;
       case PeriodoFiltro.MES_ANTERIOR:
         dataInicio = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-        dataFim = new Date(hoje.getFullYear(), hoje.getMonth(), 0, 23, 59, 59);
+        dataFim    = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
         break;
       case PeriodoFiltro.TRIMESTRE:
         dataInicio = new Date(hoje.getFullYear(), hoje.getMonth() - 2, 1);
+        dataFim    = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
         break;
       case PeriodoFiltro.ANO_ATUAL:
         dataInicio = new Date(hoje.getFullYear(), 0, 1);
-        dataFim = new Date(hoje.getFullYear(), 11, 31, 23, 59, 59);
+        dataFim    = new Date(hoje.getFullYear(), 11, 31);
         break;
       case PeriodoFiltro.PERSONALIZADO:
         dataInicio = new Date(filtro.dataInicio);
-        dataFim = new Date(filtro.dataFim);
+        dataFim    = new Date(filtro.dataFim);
         break;
       default:
         dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        dataFim    = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
     }
 
-    return { dataInicio, dataFim };
+    // Retorna strings ISO (YYYY-MM-DD) para evitar problemas de timezone no PostgreSQL
+    const fmt = (d: Date) => d.toISOString().split('T')[0];
+    return { dataInicio: fmt(dataInicio), dataFim: fmt(dataFim) };
   }
 
   async buscarResumo(filtro: FiltroDashboardDto) {
     if (!filtro.fazendaId) return { totalReceitas: 0, totalDespesas: 0, saldo: 0, margemLucro: 0 };
 
     const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
-    const query = this.financeiroRepository.createQueryBuilder('f');
 
-    query.where(
-      '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
-      { dataInicio, dataFim },
-    );
-    query.andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId });
-    if (filtro.safraId) query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
+    const query = this.financeiroRepository.createQueryBuilder('f')
+      .where('f."fazendaId" = :fazendaId', { fazendaId: filtro.fazendaId })
+      .andWhere('COALESCE(f.data::text, f."createdAt"::date::text) BETWEEN :dataInicio AND :dataFim',
+        { dataInicio, dataFim });
+
+    if (filtro.safraId) query.andWhere('f."safraId" = :safraId', { safraId: filtro.safraId });
 
     const lancamentos = await query.getMany();
 
     const totalReceitas = lancamentos
-      .filter((l) => l.tipo === TipoLancamento.RECEITA)
+      .filter(l => l.tipo === TipoLancamento.RECEITA)
       .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const totalDespesas = lancamentos
-      .filter((l) => l.tipo === TipoLancamento.DESPESA)
+      .filter(l => l.tipo === TipoLancamento.DESPESA)
       .reduce((acc, l) => acc + Number(l.valor), 0);
 
     const saldo = totalReceitas - totalDespesas;
@@ -85,18 +89,16 @@ export class DashboardService {
       .select('f.categoria', 'categoria')
       .addSelect('SUM(f.valor)', 'total')
       .where('f.tipo = :tipo', { tipo: TipoLancamento.DESPESA })
-      .andWhere(
-        '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
-        { dataInicio, dataFim },
-      )
-      .andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId })
+      .andWhere('f."fazendaId" = :fazendaId', { fazendaId: filtro.fazendaId })
+      .andWhere('COALESCE(f.data::text, f."createdAt"::date::text) BETWEEN :dataInicio AND :dataFim',
+        { dataInicio, dataFim })
       .groupBy('f.categoria')
       .orderBy('total', 'DESC');
 
-    if (filtro.safraId) query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
+    if (filtro.safraId) query.andWhere('f."safraId" = :safraId', { safraId: filtro.safraId });
 
     const resultado = await query.getRawMany();
-    return resultado.map((r) => ({
+    return resultado.map(r => ({
       categoria: r.categoria ?? 'Sem categoria',
       total: parseFloat(r.total),
     }));
@@ -109,18 +111,16 @@ export class DashboardService {
 
     const query = this.financeiroRepository
       .createQueryBuilder('f')
-      .select("TO_CHAR(COALESCE(f.data, f.createdAt), 'YYYY-MM')", 'mes')
+      .select("TO_CHAR(COALESCE(f.data, f.\"createdAt\"::date), 'YYYY-MM')", 'mes')
       .addSelect('f.tipo', 'tipo')
       .addSelect('SUM(f.valor)', 'total')
-      .where(
-        '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
-        { dataInicio, dataFim },
-      )
-      .andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId })
-      .groupBy("TO_CHAR(COALESCE(f.data, f.createdAt), 'YYYY-MM'), f.tipo")
-      .orderBy("TO_CHAR(COALESCE(f.data, f.createdAt), 'YYYY-MM')", 'ASC');
+      .where('f."fazendaId" = :fazendaId', { fazendaId: filtro.fazendaId })
+      .andWhere('COALESCE(f.data::text, f."createdAt"::date::text) BETWEEN :dataInicio AND :dataFim',
+        { dataInicio, dataFim })
+      .groupBy("TO_CHAR(COALESCE(f.data, f.\"createdAt\"::date), 'YYYY-MM'), f.tipo")
+      .orderBy("TO_CHAR(COALESCE(f.data, f.\"createdAt\"::date), 'YYYY-MM')", 'ASC');
 
-    if (filtro.safraId) query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
+    if (filtro.safraId) query.andWhere('f."safraId" = :safraId', { safraId: filtro.safraId });
 
     const rows = await query.getRawMany();
     const porMes: Record<string, { mes: string; receitas: number; despesas: number }> = {};
@@ -135,25 +135,19 @@ export class DashboardService {
   }
 
   async buscarLancamentosRecentes(filtro: FiltroDashboardDto) {
-    // ── Sem fazenda selecionada → retorna vazio ──
     if (!filtro.fazendaId) return [];
 
     const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
 
     const query = this.financeiroRepository
       .createQueryBuilder('f')
-      .where(
-        '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
-        { dataInicio, dataFim },
-      )
-      // ── Filtra APENAS pela fazenda selecionada ──
-      .andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId })
+      .where('f."fazendaId" = :fazendaId', { fazendaId: filtro.fazendaId })
+      .andWhere('COALESCE(f.data::text, f."createdAt"::date::text) BETWEEN :dataInicio AND :dataFim',
+        { dataInicio, dataFim })
       .orderBy('f.data', 'DESC')
-      .addOrderBy('f.createdAt', 'DESC');
+      .addOrderBy('f."createdAt"', 'DESC');
 
-    if (filtro.safraId) {
-      query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
-    }
+    if (filtro.safraId) query.andWhere('f."safraId" = :safraId', { safraId: filtro.safraId });
 
     return query.getMany();
   }

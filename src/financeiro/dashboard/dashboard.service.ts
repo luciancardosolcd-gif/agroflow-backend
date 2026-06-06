@@ -13,7 +13,7 @@ export class DashboardService {
     private readonly financeiroRepository: Repository<Financeiro>,
   ) {}
 
-  private resolverPeriodo(filtro: FiltroDashboardDto): { dataInicio: Date; dataFim: Date } { 
+  private resolverPeriodo(filtro: FiltroDashboardDto): { dataInicio: Date; dataFim: Date } {
     const hoje = new Date();
     let dataInicio: Date;
     let dataFim: Date = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59);
@@ -48,14 +48,12 @@ export class DashboardService {
     if (!filtro.fazendaId) return { totalReceitas: 0, totalDespesas: 0, saldo: 0, margemLucro: 0 };
 
     const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
-
     const query = this.financeiroRepository.createQueryBuilder('f');
 
     query.where(
       '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
       { dataInicio, dataFim },
     );
-
     query.andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId });
     if (filtro.safraId) query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
 
@@ -137,23 +135,27 @@ export class DashboardService {
   }
 
   async buscarLancamentosRecentes(filtro: FiltroDashboardDto) {
+    // ── Sem fazenda selecionada → retorna vazio ──
     if (!filtro.fazendaId) return [];
 
     const { dataInicio, dataFim } = this.resolverPeriodo(filtro);
 
-    return this.financeiroRepository
+    const query = this.financeiroRepository
       .createQueryBuilder('f')
       .where(
         '(f.data BETWEEN :dataInicio AND :dataFim OR (f.data IS NULL AND f.createdAt BETWEEN :dataInicio AND :dataFim))',
         { dataInicio, dataFim },
       )
+      // ── Filtra APENAS pela fazenda selecionada ──
       .andWhere('f.fazendaId = :fazendaId', { fazendaId: filtro.fazendaId })
-      .andWhere(filtro.safraId ? 'f.safraId = :safraId' : '1=1',
-        filtro.safraId ? { safraId: filtro.safraId } : {}
-      )
       .orderBy('f.data', 'DESC')
-      .addOrderBy('f.createdAt', 'DESC')
-      .getMany();
+      .addOrderBy('f.createdAt', 'DESC');
+
+    if (filtro.safraId) {
+      query.andWhere('f.safraId = :safraId', { safraId: filtro.safraId });
+    }
+
+    return query.getMany();
   }
 
   async buscarTodosDados(filtro: FiltroDashboardDto) {

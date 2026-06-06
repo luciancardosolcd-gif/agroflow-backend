@@ -8,8 +8,6 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import * as bcrypt from 'bcryptjs';
 
-const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
-
 @ApiTags('Usuarios')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -21,11 +19,15 @@ export class UsersController {
     private usersRepo: Repository<User>,
   ) {}
 
+  private isAdmin(user: User): boolean {
+    return user?.perfil === 'admin';
+  }
+
   @Get()
   async findAll(@Request() req: any) {
     const userId = req.user.sub || req.user.userId;
     const user = await this.usersRepo.findOne({ where: { id: userId } });
-    if (!user || ACESSO_TOTAL.includes(user.email)) {
+    if (!user || this.isAdmin(user)) {
       return this.service.findAll();
     }
     return this.usersRepo.find({ where: { tenantId: user.tenantId } });
@@ -50,12 +52,13 @@ export class UsersController {
       perfil: body.perfil || 'operador',
       status: body.status || 'ativo',
     };
-    if (user && !ACESSO_TOTAL.includes(user.email)) {
+    if (user && !this.isAdmin(user)) {
       obj.tenantId = user.tenantId;
     }
     return this.service.create(obj);
   }
-@Put(':id')
+
+  @Put(':id')
   @Roles('admin')
   async update(@Param('id') id: string, @Body() data: any) {
     if (data.senha) {
@@ -77,4 +80,4 @@ export class UsersController {
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
- 
+}

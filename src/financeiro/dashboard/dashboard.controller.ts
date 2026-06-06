@@ -1,5 +1,5 @@
 import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { DashboardService } from './dashboard.service';
 import { FiltroDashboardDto } from '../dto/filtro-dashboard.dto';
@@ -8,8 +8,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../users/user.entity';
 import { Propriedade } from '../../propriedades/propriedade.entity';
-
-const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com'];
 
 @ApiTags('Financeiro - Dashboard')
 @ApiBearerAuth()
@@ -24,26 +22,30 @@ export class DashboardController {
     private propriedadesRepo: Repository<Propriedade>,
   ) {}
 
+  private isAdmin(user: User): boolean {
+    // Usa perfil ao invés de lista de emails — funciona para qualquer admin
+    return user?.perfil === 'admin';
+  }
+
   /**
    * Resolve o fazendaId correto:
-   * - Se o frontend mandou fazendaId na query → usa ele (vale para qualquer usuário)
-   * - Se não mandou E não é super admin → busca a fazenda do tenant do usuário
-   * - Se não mandou E é super admin → undefined (busca tudo)
+   * - Se o frontend mandou fazendaId na query → usa sempre
+   * - Se não mandou E é admin → undefined (busca tudo)
+   * - Se não mandou E não é admin → busca a fazenda do tenant do usuário
    */
   private async resolveFazendaId(
     req: any,
     filtro: FiltroDashboardDto,
   ): Promise<string | undefined> {
-    // ✅ FIX: frontend mandou fazendaId explícito → respeita sempre
+    // Frontend mandou fazendaId explícito → respeita sempre
     if (filtro.fazendaId) return filtro.fazendaId;
 
     const userId = req.user.sub || req.user.userId;
     const user = await this.usersRepo.findOne({ where: { id: userId } });
-
     if (!user) return undefined;
 
-    // Super admin sem filtro explícito → vê tudo
-    if (ACESSO_TOTAL.includes(user.email)) return undefined;
+    // Admin sem filtro explícito → vê tudo
+    if (this.isAdmin(user)) return undefined;
 
     // Usuário comum → filtra pela fazenda do seu tenant
     if (user.tenantId) {

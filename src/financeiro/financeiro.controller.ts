@@ -12,8 +12,6 @@ import { Repository } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Propriedade } from '../propriedades/propriedade.entity';
 
-const ACESSO_TOTAL = ['luciancardoso@agroflow.com', 'admin01@agroflow.com']; 
-
 @ApiTags('Financeiro')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -27,6 +25,11 @@ export class FinanceiroController {
     private propriedadesRepo: Repository<Propriedade>,
   ) {}
 
+  private isAdmin(user: User): boolean {
+    // Usa perfil ao invés de lista de emails — funciona para qualquer admin
+    return user?.perfil === 'admin';
+  }
+
   private async getFazendaId(userId: string): Promise<string | undefined> {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user?.tenantId) return undefined;
@@ -37,27 +40,27 @@ export class FinanceiroController {
   }
 
   @Get()
-async findAll(
-  @Request() req: any,
-  @Query('fazendaId') fazendaIdQuery?: string,
-) {
-  console.log('fazendaIdQuery recebido:', fazendaIdQuery);
-  const userId = req.user.sub || req.user.userId;
-  const user = await this.usersRepo.findOne({ where: { id: userId } });
-  if (user && ACESSO_TOTAL.includes(user.email)) {
-    console.log('Admin detectado, fazendaId:', fazendaIdQuery);
+  async findAll(
+    @Request() req: any,
+    @Query('fazendaId') fazendaIdQuery?: string,
+  ) {
+    const userId = req.user.sub || req.user.userId;
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+
+    // Admin (qualquer um com perfil='admin') → acesso total
+    if (user && this.isAdmin(user)) {
+      if (fazendaIdQuery && fazendaIdQuery.trim() !== '') {
+        return this.service.findAll(fazendaIdQuery.trim());
+      }
+      return this.service.findAllWithoutFilter();
+    }
+
+    // Usuário comum → se veio fazendaId na query, usa ele
     if (fazendaIdQuery && fazendaIdQuery.trim() !== '') {
       return this.service.findAll(fazendaIdQuery.trim());
     }
-    return this.service.findAllWithoutFilter();
-  }
 
-    // Usuário comum → filtra pela fazenda do tenant
-    // Se veio fazendaId na query, usa ele (mais específico)
-    if (fazendaIdQuery && fazendaIdQuery.trim() !== '') {
-      return this.service.findAll(fazendaIdQuery.trim());
-    }
-
+    // Usuário comum sem filtro → filtra pela fazenda do tenant
     const fazendaId = await this.getFazendaId(userId);
     if (!fazendaId) return [];
     return this.service.findAll(fazendaId);
@@ -77,14 +80,12 @@ async findAll(
   @Roles('admin', 'gestor', 'operador')
   async create(@Body() data: any, @Request() req: any) {
     const userId = req.user.sub || req.user.userId;
-
     // Se o body já traz fazendaId (selecionado no frontend), usa ele
     // Caso contrário, pega pelo tenant do usuário
     let fazendaId = data.fazendaId;
     if (!fazendaId) {
       fazendaId = await this.getFazendaId(userId);
     }
-
     return this.service.create({ ...data, fazendaId });
   }
 

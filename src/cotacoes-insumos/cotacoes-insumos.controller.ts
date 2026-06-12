@@ -29,7 +29,7 @@ export class CotacoesInsumosController {
 
   @Get()
   findAll(
-    @Query('empresa') empresa?: string,
+    @Query('empresa') empresa?: string, 
     @Query('segmento') segmento?: Segmento,
     @Query('produto') produto?: string,
     @Query('principio_ativo') principio_ativo?: string,

@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CotacoesInsumosService } from './cotacoes-insumos.service';
-import { CreateCotacaoInsumoDto } from './dto/create-cotacoes-insumos.dto';
+import { CreateCotacaoInsumoDto } from './dto/create-cotacao-insumo.dto';
 import { Segmento, Moeda } from './cotacao-insumo.entity';
 
 @UseGuards(AuthGuard('jwt'))

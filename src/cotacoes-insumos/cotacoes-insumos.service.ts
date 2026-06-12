@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, Like, ILike } from 'typeorm';
 import { CotacaoInsumo, Segmento, Moeda } from './cotacao-insumo.entity';
-import { CreateCotacaoInsumoDto } from './dto/create-cotacao-insumo.dto';
+import { CreateCotacaoInsumoDto } from './dto/create-cotacoes-insumos.dto';
 
 @Injectable()
 export class CotacoesInsumosService {

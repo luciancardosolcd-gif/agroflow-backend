@@ -12,12 +12,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { CotacoesInsumosService } from './cotacoes-insumos.service';
 import { CreateCotacaoInsumoDto } from './dto/create-cotacao-insumo.dto';
-import { JwtAuthGuard } from '../autorização/jwt.strategy';
 import { Segmento, Moeda } from './cotacao-insumo.entity';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(AuthGuard('jwt'))
 @Controller('cotacoes-insumos')
 export class CotacoesInsumosController {
   constructor(private readonly service: CotacoesInsumosService) {}

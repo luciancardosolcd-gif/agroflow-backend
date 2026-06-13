@@ -17,21 +17,50 @@ import {
 import { Type } from 'class-transformer';
 
 export enum Segmento {
-  HERBICIDA = 'Herbicida', FUNGICIDA = 'Fungicida', INSETICIDA = 'Inseticida',
-  FERTILIZANTE = 'Fertilizante', ADJUVANTE = 'Adjuvante', BIOLOGICO = 'Biológico',
-  SEMENTE = 'Semente', REGULADOR_CRESCIMENTO = 'Regulador de Crescimento',
-  TRATAMENTO_SEMENTES = 'Tratamento de Sementes', OUTROS = 'Outros',
+  HERBICIDA = 'Herbicida',
+  FUNGICIDA = 'Fungicida',
+  INSETICIDA = 'Inseticida',
+  FERTILIZANTE = 'Fertilizante',
+  ADJUVANTE = 'Adjuvante',
+  BIOLOGICO = 'Biológico',
+  SEMENTE = 'Semente',
+  REGULADOR_CRESCIMENTO = 'Regulador de Crescimento',
+  TRATAMENTO_SEMENTES = 'Tratamento de Sementes',
+  OUTROS = 'Outros',
 }
+
 export enum UnidadeConcentracao {
-  G_L = 'g/L', G_KG = 'g/Kg', SC = 'SC', WG = 'WG',
-  EC = 'EC', SL = 'SL', OD = 'OD', FS = 'FS', OUTROS = 'Outros',
+  G_L = 'g/L',
+  G_KG = 'g/Kg',
+  SC = 'SC',
+  WG = 'WG',
+  EC = 'EC',
+  SL = 'SL',
+  OD = 'OD',
+  FS = 'FS',
+  OUTROS = 'Outros',
 }
-export enum UnidadeVolume { LITRO = 'Litro', KG = 'Kg', ML = 'mL', G = 'g' }
-export enum Moeda { REAL = 'BRL', DOLAR = 'USD' }
+
+export enum UnidadeVolume {
+  LITRO = 'Litro',
+  KG = 'Kg',
+  ML = 'mL',
+  G = 'g',
+}
+
+export enum Moeda {
+  REAL = 'BRL',
+  DOLAR = 'USD',
+}
+
 export enum PrazoPagamento {
-  A_VISTA = 'À Vista', TRINTA = '30 dias', SESSENTA = '60 dias',
-  NOVENTA = '90 dias', CENTO_VINTE = '120 dias',
-  PRAZO_SOJA = 'Prazo Soja', PERSONALIZADO = 'Personalizado',
+  A_VISTA = 'À Vista',
+  TRINTA = '30 dias',
+  SESSENTA = '60 dias',
+  NOVENTA = '90 dias',
+  CENTO_VINTE = '120 dias',
+  PRAZO_SOJA = 'Prazo Soja',
+  PERSONALIZADO = 'Personalizado',
 }
 
 @Entity('cotacoes_insumos')
@@ -79,7 +108,10 @@ export class CreateCotacaoInsumoDto {
 
 @Injectable()
 export class CotacoesInsumosService {
-  constructor(@InjectRepository(CotacaoInsumo) private readonly repo: Repository<CotacaoInsumo>) {}
+  constructor(
+    @InjectRepository(CotacaoInsumo)
+    private readonly repo: Repository<CotacaoInsumo>,
+  ) {}
 
   async create(dto: CreateCotacaoInsumoDto, usuarioId: string) {
     return this.repo.save(this.repo.create({ ...dto, usuario_id: usuarioId }));
@@ -109,11 +141,15 @@ export class CotacoesInsumosService {
     return this.repo.save(c);
   }
 
-  async remove(id: string) { await this.repo.remove(await this.findOne(id)); }
+  async remove(id: string) {
+    await this.repo.remove(await this.findOne(id));
+  }
 
   async getDashboard() {
     const all = await this.repo.find({ order: { created_at: 'DESC' } });
-    const precosBRL = all.filter(c => c.moeda === Moeda.REAL && c.preco_unitario > 0).map(c => Number(c.preco_unitario));
+    const precosBRL = all
+      .filter(c => c.moeda === Moeda.REAL && c.preco_unitario > 0)
+      .map(c => Number(c.preco_unitario));
     return {
       menorCotacao: precosBRL.length ? Math.min(...precosBRL) : 0,
       maiorCotacao: precosBRL.length ? Math.max(...precosBRL) : 0,
@@ -127,14 +163,19 @@ export class CotacoesInsumosService {
   }
 
   async comparar(principioAtivo: string) {
-    const cotacoes = await this.repo.find({ where: { principio_ativo: ILike(`%${principioAtivo}%`) }, order: { preco_unitario: 'ASC' } });
+    const cotacoes = await this.repo.find({
+      where: { principio_ativo: ILike(`%${principioAtivo}%`) },
+      order: { preco_unitario: 'ASC' },
+    });
     if (!cotacoes.length) return { principioAtivo, cotacoes: [], resumo: null };
     const precos = cotacoes.map(c => Number(c.preco_unitario));
     const menor = Math.min(...precos), maior = Math.max(...precos);
     return {
-      principioAtivo, cotacoes,
+      principioAtivo,
+      cotacoes,
       resumo: {
-        menorPreco: menor, maiorPreco: maior,
+        menorPreco: menor,
+        maiorPreco: maior,
         precoMedio: precos.reduce((a, b) => a + b, 0) / precos.length,
         diferencaPercentual: maior > 0 ? ((maior - menor) / maior) * 100 : 0,
         totalEmpresas: new Set(cotacoes.map(c => c.empresa)).size,
@@ -145,23 +186,51 @@ export class CotacoesInsumosService {
   async getPrecoPorSegmento() {
     const all = await this.repo.find();
     const map: Record<string, number[]> = {};
-    for (const c of all) { if (!map[c.segmento]) map[c.segmento] = []; map[c.segmento].push(Number(c.preco_unitario)); }
-    return Object.entries(map).map(([segmento, p]) => ({ segmento, mediaPreco: p.reduce((a, b) => a + b, 0) / p.length, total: p.length }));
+    for (const c of all) {
+      if (!map[c.segmento]) map[c.segmento] = [];
+      map[c.segmento].push(Number(c.preco_unitario));
+    }
+    return Object.entries(map).map(([segmento, p]) => ({
+      segmento,
+      mediaPreco: p.reduce((a, b) => a + b, 0) / p.length,
+      total: p.length,
+    }));
   }
 
   async getRankingEmpresas() {
     const all = await this.repo.find();
     const map: Record<string, number[]> = {};
-    for (const c of all) { if (!map[c.empresa]) map[c.empresa] = []; map[c.empresa].push(Number(c.preco_unitario)); }
-    return Object.entries(map).map(([empresa, p]) => ({ empresa, mediaPreco: p.reduce((a, b) => a + b, 0) / p.length, totalCotacoes: p.length })).sort((a, b) => a.mediaPreco - b.mediaPreco).slice(0, 5);
+    for (const c of all) {
+      if (!map[c.empresa]) map[c.empresa] = [];
+      map[c.empresa].push(Number(c.preco_unitario));
+    }
+    return Object.entries(map)
+      .map(([empresa, p]) => ({
+        empresa,
+        mediaPreco: p.reduce((a, b) => a + b, 0) / p.length,
+        totalCotacoes: p.length,
+      }))
+      .sort((a, b) => a.mediaPreco - b.mediaPreco)
+      .slice(0, 5);
   }
 
   async getEvolucaoPrecos(dias = 30) {
-    const inicio = new Date(); inicio.setDate(inicio.getDate() - dias);
-    const all = await this.repo.find({ where: { created_at: Between(inicio, new Date()) as any }, order: { created_at: 'ASC' } });
+    const inicio = new Date();
+    inicio.setDate(inicio.getDate() - dias);
+    const all = await this.repo.find({
+      where: { created_at: Between(inicio, new Date()) as any },
+      order: { created_at: 'ASC' },
+    });
     const map: Record<string, number[]> = {};
-    for (const c of all) { const d = new Date(c.created_at).toISOString().split('T')[0]; if (!map[d]) map[d] = []; map[d].push(Number(c.preco_unitario)); }
-    return Object.entries(map).map(([data, p]) => ({ data, mediaPreco: p.reduce((a, b) => a + b, 0) / p.length }));
+    for (const c of all) {
+      const d = new Date(c.created_at).toISOString().split('T')[0];
+      if (!map[d]) map[d] = [];
+      map[d].push(Number(c.preco_unitario));
+    }
+    return Object.entries(map).map(([data, p]) => ({
+      data,
+      mediaPreco: p.reduce((a, b) => a + b, 0) / p.length,
+    }));
   }
 }
 
@@ -169,18 +238,53 @@ export class CotacoesInsumosService {
 @Controller('cotacoes-insumos')
 export class CotacoesInsumosController {
   constructor(private readonly service: CotacoesInsumosService) {}
-  @Post() create(@Body() dto: CreateCotacaoInsumoDto, @Request() req: any) { return this.service.create(dto, req.user?.id); }
-  @Get() findAll(@Query('empresa') empresa?: string, @Query('segmento') segmento?: Segmento, @Query('produto') produto?: string, @Query('principio_ativo') principio_ativo?: string, @Query('moeda') moeda?: Moeda, @Query('data_inicio') data_inicio?: string, @Query('data_fim') data_fim?: string) {
+
+  @Post()
+  create(@Body() dto: CreateCotacaoInsumoDto, @Request() req: any) {
+    return this.service.create(dto, req.user?.id);
+  }
+
+  @Get()
+  findAll(
+    @Query('empresa') empresa?: string,
+    @Query('segmento') segmento?: Segmento,
+    @Query('produto') produto?: string,
+    @Query('principio_ativo') principio_ativo?: string,
+    @Query('moeda') moeda?: Moeda,
+    @Query('data_inicio') data_inicio?: string,
+    @Query('data_fim') data_fim?: string,
+  ) {
     return this.service.findAll({ empresa, segmento, produto, principio_ativo, moeda, data_inicio, data_fim });
   }
-  @Get('dashboard') getDashboard() { return this.service.getDashboard(); }
-  @Get('comparar') comparar(@Query('principio_ativo') pa: string) { return this.service.comparar(pa); }
-  @Get('graficos/segmentos') getSegmentos() { return this.service.getPrecoPorSegmento(); }
-  @Get('graficos/ranking-empresas') getRanking() { return this.service.getRankingEmpresas(); }
-  @Get('graficos/evolucao') getEvolucao(@Query('dias') dias?: string) { return this.service.getEvolucaoPrecos(dias ? parseInt(dias) : 30); }
-  @Get(':id') findOne(@Param('id') id: string) { return this.service.findOne(id); }
-  @Put(':id') update(@Param('id') id: string, @Body() dto: Partial<CreateCotacaoInsumoDto>) { return this.service.update(id, dto); }
-  @Delete(':id') @HttpCode(HttpStatus.NO_CONTENT) remove(@Param('id') id: string) { return this.service.remove(id); }
+
+  @Get('dashboard')
+  getDashboard() { return this.service.getDashboard(); }
+
+  @Get('comparar')
+  comparar(@Query('principio_ativo') pa: string) { return this.service.comparar(pa); }
+
+  @Get('graficos/segmentos')
+  getSegmentos() { return this.service.getPrecoPorSegmento(); }
+
+  @Get('graficos/ranking-empresas')
+  getRanking() { return this.service.getRankingEmpresas(); }
+
+  @Get('graficos/evolucao')
+  getEvolucao(@Query('dias') dias?: string) {
+    return this.service.getEvolucaoPrecos(dias ? parseInt(dias) : 30);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) { return this.service.findOne(id); }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() dto: Partial<CreateCotacaoInsumoDto>) {
+    return this.service.update(id, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id') id: string) { return this.service.remove(id); }
 }
 
 @Module({

@@ -22,17 +22,24 @@ import { CotacoesInsumosModule } from './cotacoes-insumos/cotacoes-insumos.modul
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        url: config.get('DATABASE_URL'),
-        ssl: { rejectUnauthorized: false },
-        synchronize: true,
-        logging: false,
-        schema: 'public',
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        retryAttempts: 30,
-        retryDelay: 5000,
-      }),
+      useFactory: (config: ConfigService) => {
+        const dbUrl = new URL(config.get('DATABASE_URL'));
+        return {
+          type: 'postgres',
+          host: dbUrl.hostname,
+          port: parseInt(dbUrl.port),
+          username: decodeURIComponent(dbUrl.username),
+          password: decodeURIComponent(dbUrl.password),
+          database: dbUrl.pathname.replace('/', ''),
+          ssl: { rejectUnauthorized: false },
+          synchronize: true,
+          logging: false,
+          schema: 'public',
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          retryAttempts: 30,
+          retryDelay: 5000,
+        };
+      },
       inject: [ConfigService],
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),

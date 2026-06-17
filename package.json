@@ -1,13 +1,12 @@
 {
   "name": "agroflow-backend",
-"version": "1.0.1",
+  "version": "1.0.1",
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "nest build",
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main"
-    "_cache": "v2",
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -38,6 +37,3 @@
     "typescript": "^5.4.5"
   }
 }
- 
-  
- 

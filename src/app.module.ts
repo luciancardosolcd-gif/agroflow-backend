@@ -30,6 +30,8 @@ import { CotacoesInsumosModule } from './cotacoes-insumos/cotacoes-insumos.modul
         logging: false,
         schema: 'public',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        retryAttempts: 30,
+        retryDelay: 5000,
       }),
       inject: [ConfigService],
     }),

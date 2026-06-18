@@ -32,7 +32,7 @@ import { CotacoesInsumosModule } from './cotacoes-insumos/cotacoes-insumos.modul
           password: decodeURIComponent(dbUrl.password),
           database: dbUrl.pathname.replace('/', ''),
           ssl: { rejectUnauthorized: false },
-          synchronize: true,
+         synchronize: false,
           logging: false,
           schema: 'public',
           entities: [__dirname + '/**/*.entity{.ts,.js}'],

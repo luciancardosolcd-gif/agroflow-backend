@@ -25,7 +25,7 @@ export class PropriedadesController {
   async findAll(@Request() req: any) {
     const userId = req.user.sub || req.user.userId;
     const user = await this.usersRepo.findOne({ where: { id: userId } });
-    return this.service.findAll(user?.tenantId, user?.perfil);
+   return this.service.findAll(user?.tenantId, user?.perfil);
   }
 
   @Get(':id')

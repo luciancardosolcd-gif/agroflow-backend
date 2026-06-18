@@ -51,3 +51,4 @@ export class PropriedadesController {
     return this.service.remove(id);
   }
 }
+  

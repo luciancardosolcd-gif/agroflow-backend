@@ -23,14 +23,17 @@ export class UsersController {
     return user?.perfil === 'admin';
   }
 
-  @Get()
-  async findAll(@Request() req: any) {
-    const userId = req.user.sub || req.user.userId;
-    const user = await this.usersRepo.findOne({ where: { id: userId } });
-    if (!user || this.isAdmin(user)) {
-      return this.service.findAll();
-    }
+ @Get()
+async findAll(@Request() req: any) {
+  const userId = req.user.sub || req.user.userId;
+  const user = await this.usersRepo.findOne({ where: { id: userId } });
+  if (user?.perfil === 'admin' && !user?.tenantId) {
+    return this.service.findAll();
+  }
+  if (user?.tenantId) {
     return this.usersRepo.find({ where: { tenantId: user.tenantId } });
+  }
+  return [];
   }
 
   @Get(':id')

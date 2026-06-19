@@ -25,11 +25,6 @@ export class FinanceiroController {
     private propriedadesRepo: Repository<Propriedade>,
   ) {}
 
-  private isAdmin(user: User): boolean {
-    // Usa perfil ao invés de lista de emails — funciona para qualquer admin
-    return user?.perfil === 'admin';
-  }
-
   private async getFazendaId(userId: string): Promise<string | undefined> {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user?.tenantId) return undefined;
@@ -47,21 +42,12 @@ export class FinanceiroController {
     const userId = req.user.sub || req.user.userId;
     const user = await this.usersRepo.findOne({ where: { id: userId } });
 
-    // Admin (qualquer um com perfil='admin') → acesso total
-    if (user && this.isAdmin(user)) {
-      if (fazendaIdQuery && fazendaIdQuery.trim() !== '') {
-        return this.service.findAll(fazendaIdQuery.trim());
-      }
+    if (user?.perfil === 'admin' && !user?.tenantId) {
+      if (fazendaIdQuery?.trim()) return this.service.findAll(fazendaIdQuery.trim());
       return this.service.findAllWithoutFilter();
     }
 
-    // Usuário comum → se veio fazendaId na query, usa ele
-    if (fazendaIdQuery && fazendaIdQuery.trim() !== '') {
-      return this.service.findAll(fazendaIdQuery.trim());
-    }
-
-    // Usuário comum sem filtro → filtra pela fazenda do tenant
-    const fazendaId = await this.getFazendaId(userId);
+    const fazendaId = fazendaIdQuery?.trim() || await this.getFazendaId(userId);
     if (!fazendaId) return [];
     return this.service.findAll(fazendaId);
   }
@@ -80,8 +66,6 @@ export class FinanceiroController {
   @Roles('admin', 'gestor', 'operador')
   async create(@Body() data: any, @Request() req: any) {
     const userId = req.user.sub || req.user.userId;
-    // Se o body já traz fazendaId (selecionado no frontend), usa ele
-    // Caso contrário, pega pelo tenant do usuário
     let fazendaId = data.fazendaId;
     if (!fazendaId) {
       fazendaId = await this.getFazendaId(userId);

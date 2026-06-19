@@ -22,10 +22,10 @@ export class PropriedadesController {
   ) {}
 
   @Get()
-  async findAll(@Request() req: any) {
-    const userId = req.user.sub || req.user.userId;
-    const user = await this.usersRepo.findOne({ where: { id: userId } });
-   return this.service.findAll(user?.tenantId, user?.perfil);
+async findAll(@Request() req: any) {
+  const userId = req.user.sub || req.user.userId;
+  const user = await this.usersRepo.findOne({ where: { id: userId } });
+  return this.service.findAll(user?.tenantId, req.user.perfil);
   }
 
   @Get(':id')

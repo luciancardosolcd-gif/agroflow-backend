@@ -27,15 +27,18 @@ export class SafrasController {
   ) {}
 
   @Get()
-  async findAll(@Query('propriedadeId') propriedadeId?: string, @Request() req?: any) {
-    const userId = req.user.sub || req.user.userId;
-    const user = await this.usersRepo.findOne({ where: { id: userId } });
-    if (!user || ACESSO_TOTAL.includes(user.email)) {
-      return this.service.findAll(propriedadeId, user?.email);
-    }
+async findAll(@Query('propriedadeId') propriedadeId?: string, @Request() req?: any) {
+  const userId = req.user.sub || req.user.userId;
+  const user = await this.usersRepo.findOne({ where: { id: userId } });
+  if (user?.perfil === 'admin' && !user?.tenantId) {
+    return this.service.findAll(propriedadeId);
+  }
+  if (user?.tenantId) {
     const props = await this.propriedadesRepo.find({ where: { tenantId: user.tenantId } });
     const ids = props.map(p => p.id);
-    return this.service.findAll(propriedadeId, user.email, ids);
+    return this.service.findAll(propriedadeId, undefined, ids);
+  }
+  return [];
   }
 
   @Get(':id')

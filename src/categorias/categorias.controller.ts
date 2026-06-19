@@ -41,20 +41,20 @@ export class CategoriasController {
   }
 
   @Get('resumo-dashboard')
-  async resumoDashboard(
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
-    @Query('fazendaId') fazendaId?: string,
-    @Query('safraId') safraId?: string,
-    @Request() req?: any,
-  ) {
-    const userId = req.user.sub || req.user.userId;
-    const user = await this.usersRepo.findOne({ where: { id: userId } });
-    if (user && !ACESSO_TOTAL.includes(user.email) && user.tenantId) {
-      const prop = await this.propriedadesRepo.findOne({ where: { tenantId: user.tenantId } });
-      fazendaId = prop?.id || 'none';
-    }
-    return this.service.getDashboard({ startDate, endDate, fazendaId, safraId });
+async resumoDashboard(
+  @Query('startDate') startDate?: string,
+  @Query('endDate') endDate?: string,
+  @Query('fazendaId') fazendaId?: string,
+  @Query('safraId') safraId?: string,
+  @Request() req?: any,
+) {
+  const userId = req.user.sub || req.user.userId;
+  const user = await this.usersRepo.findOne({ where: { id: userId } });
+  if (user?.tenantId && !(user?.perfil === 'admin' && !user?.tenantId)) {
+    const prop = await this.propriedadesRepo.findOne({ where: { tenantId: user.tenantId } });
+    fazendaId = prop?.id || 'none';
+  }
+  return this.service.getDashboard({ startDate, endDate, fazendaId, safraId });
   }
 
   @Get(':id')

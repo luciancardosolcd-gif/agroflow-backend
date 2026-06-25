@@ -85,5 +85,9 @@ export class CreateCotacaoInsumoDto {
 
   @IsOptional()
   @IsString()
-  observacoes?: string; 
+  observacoes?: string;
+
+  @IsOptional()
+  @IsString()
+  fazenda_id?: string;
 }

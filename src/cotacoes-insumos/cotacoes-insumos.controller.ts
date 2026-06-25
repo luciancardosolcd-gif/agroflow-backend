@@ -72,3 +72,4 @@ export class CotacoesInsumosController {
     return this.service.remove(id);
   }
 } 
+ 

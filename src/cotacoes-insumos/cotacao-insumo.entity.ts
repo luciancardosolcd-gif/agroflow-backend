@@ -109,6 +109,9 @@ export class CotacaoInsumo {
   @Column({ nullable: true })
   usuario_id: string;
 
+  @Column({ nullable: true })
+  fazenda_id: string;
+
   @CreateDateColumn()
   created_at: Date;
 

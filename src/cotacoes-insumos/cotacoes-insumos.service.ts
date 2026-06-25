@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, Like, ILike } from 'typeorm';
+import { Repository, Between, ILike } from 'typeorm';
 import { CotacaoInsumo, Segmento, Moeda } from './cotacao-insumo.entity';
 import { CreateCotacaoInsumoDto } from './dto/create-cotacao-insumo.dto';
 
@@ -24,6 +24,7 @@ export class CotacoesInsumosService {
     moeda?: Moeda;
     data_inicio?: string;
     data_fim?: string;
+    fazendaId?: string;
   }): Promise<CotacaoInsumo[]> {
     const where: any = {};
     if (filters?.empresa) where.empresa = ILike(`%${filters.empresa}%`);
@@ -31,6 +32,7 @@ export class CotacoesInsumosService {
     if (filters?.produto) where.produto_comercial = ILike(`%${filters.produto}%`);
     if (filters?.principio_ativo) where.principio_ativo = ILike(`%${filters.principio_ativo}%`);
     if (filters?.moeda) where.moeda = filters.moeda;
+    if (filters?.fazendaId) where.fazenda_id = filters.fazendaId;
     if (filters?.data_inicio && filters?.data_fim) {
       where.data_cotacao = Between(filters.data_inicio, filters.data_fim);
     }
@@ -54,8 +56,10 @@ export class CotacoesInsumosService {
     await this.repo.remove(cotacao);
   }
 
-  async getDashboard() {
-    const todas = await this.repo.find({ order: { created_at: 'DESC' } });
+  async getDashboard(fazendaId?: string) {
+    const where: any = {};
+    if (fazendaId) where.fazenda_id = fazendaId;
+    const todas = await this.repo.find({ where, order: { created_at: 'DESC' } });
 
     const totalEmpresas = new Set(todas.map((c) => c.empresa)).size;
     const totalProdutos = new Set(todas.map((c) => c.produto_comercial)).size;
@@ -108,8 +112,10 @@ export class CotacoesInsumosService {
     };
   }
 
-  async getPrecoPorSegmento() {
-    const cotacoes = await this.repo.find();
+  async getPrecoPorSegmento(fazendaId?: string) {
+    const where: any = {};
+    if (fazendaId) where.fazenda_id = fazendaId;
+    const cotacoes = await this.repo.find({ where });
     const por: Record<string, number[]> = {};
     for (const c of cotacoes) {
       if (!por[c.segmento]) por[c.segmento] = [];
@@ -122,8 +128,10 @@ export class CotacoesInsumosService {
     }));
   }
 
-  async getRankingEmpresas() {
-    const cotacoes = await this.repo.find();
+  async getRankingEmpresas(fazendaId?: string) {
+    const where: any = {};
+    if (fazendaId) where.fazenda_id = fazendaId;
+    const cotacoes = await this.repo.find({ where });
     const empresaMap: Record<string, { precos: number[]; total: number }> = {};
     for (const c of cotacoes) {
       if (!empresaMap[c.empresa]) empresaMap[c.empresa] = { precos: [], total: 0 };
@@ -140,13 +148,12 @@ export class CotacoesInsumosService {
       .slice(0, 5);
   }
 
-  async getEvolucaoPrecos(dias: number = 30) {
+  async getEvolucaoPrecos(dias: number = 30, fazendaId?: string) {
     const dataInicio = new Date();
     dataInicio.setDate(dataInicio.getDate() - dias);
-    const cotacoes = await this.repo.find({
-      where: { created_at: Between(dataInicio, new Date()) as any },
-      order: { created_at: 'ASC' },
-    });
+    const where: any = { created_at: Between(dataInicio, new Date()) as any };
+    if (fazendaId) where.fazenda_id = fazendaId;
+    const cotacoes = await this.repo.find({ where, order: { created_at: 'ASC' } });
 
     const porDia: Record<string, number[]> = {};
     for (const c of cotacoes) {
@@ -168,10 +175,6 @@ export class CotacoesInsumosService {
     const precoPorLitroKg = preco / volume;
     const precoPorGramaIA = concentracao > 0 ? preco / (volume * concentracao) : null;
 
-    return {
-      precoPorLitroKg,
-      precoPorGramaIA,
-      precoTotal: preco,
-    };
+    return { precoPorLitroKg, precoPorGramaIA, precoTotal: preco };
   }
 }

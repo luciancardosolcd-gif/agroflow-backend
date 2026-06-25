@@ -71,4 +71,4 @@ export class CotacoesInsumosController {
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
-}
+} 

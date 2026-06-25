@@ -1,16 +1,6 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  Request,
-  HttpCode,
-  HttpStatus,
+  Controller, Get, Post, Put, Delete,
+  Body, Param, Query, UseGuards, Request, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CotacoesInsumosService } from './cotacoes-insumos.service';
@@ -36,13 +26,14 @@ export class CotacoesInsumosController {
     @Query('moeda') moeda?: Moeda,
     @Query('data_inicio') data_inicio?: string,
     @Query('data_fim') data_fim?: string,
+    @Query('fazendaId') fazendaId?: string,
   ) {
-    return this.service.findAll({ empresa, segmento, produto, principio_ativo, moeda, data_inicio, data_fim });
+    return this.service.findAll({ empresa, segmento, produto, principio_ativo, moeda, data_inicio, data_fim, fazendaId });
   }
 
   @Get('dashboard')
-  getDashboard() {
-    return this.service.getDashboard();
+  getDashboard(@Query('fazendaId') fazendaId?: string) {
+    return this.service.getDashboard(fazendaId);
   }
 
   @Get('comparar')
@@ -51,18 +42,18 @@ export class CotacoesInsumosController {
   }
 
   @Get('graficos/segmentos')
-  getPrecoPorSegmento() {
-    return this.service.getPrecoPorSegmento();
+  getPrecoPorSegmento(@Query('fazendaId') fazendaId?: string) {
+    return this.service.getPrecoPorSegmento(fazendaId);
   }
 
   @Get('graficos/ranking-empresas')
-  getRankingEmpresas() {
-    return this.service.getRankingEmpresas();
+  getRankingEmpresas(@Query('fazendaId') fazendaId?: string) {
+    return this.service.getRankingEmpresas(fazendaId);
   }
 
   @Get('graficos/evolucao')
-  getEvolucao(@Query('dias') dias?: string) {
-    return this.service.getEvolucaoPrecos(dias ? parseInt(dias) : 30);
+  getEvolucao(@Query('dias') dias?: string, @Query('fazendaId') fazendaId?: string) {
+    return this.service.getEvolucaoPrecos(dias ? parseInt(dias) : 30, fazendaId);
   }
 
   @Get(':id')

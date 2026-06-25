@@ -18,7 +18,7 @@ import { LogsModule } from './logs/logs.module';
 import { CotacoesInsumosModule } from './cotacoes-insumos/cotacoes-insumos.module';
 
 @Module({
-  imports: [
+  imports: [ 
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

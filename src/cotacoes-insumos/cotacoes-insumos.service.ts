@@ -11,7 +11,7 @@ export class CotacoesInsumosService {
     private readonly repo: Repository<CotacaoInsumo>,
   ) {}
 
-  async create(dto: CreateCotacaoInsumoDto, usuarioId: string): Promise<CotacaoInsumo> {
+  async create(dto: CreateCotacaoInsumoDto, usuarioId: string): Promise<CotacaoInsumo> {    
     const cotacao = this.repo.create({ ...dto, usuario_id: usuarioId });
     return this.repo.save(cotacao);
   }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Talhao } from './talhao.entity';
+import { Talhao } from './talhoes.entity';
 import { CreateTalhaoDto } from './dto/create-talhao.dto';
 
 @Injectable()

@@ -16,6 +16,7 @@ import { PropriedadesModule } from './propriedades/propriedades.module';
 import { SafrasModule } from './safras/safras.module';
 import { LogsModule } from './logs/logs.module';
 import { CotacoesInsumosModule } from './cotacoes-insumos/cotacoes-insumos.module';
+import { TalhoesModule } from './talhoes/talhoes.module';
 
 @Module({
   imports: [ 
@@ -57,6 +58,7 @@ import { CotacoesInsumosModule } from './cotacoes-insumos/cotacoes-insumos.modul
     SafrasModule,
     LogsModule,
     CotacoesInsumosModule,
+    TalhoesModule,
   ],
 })
 export class AppModule {}

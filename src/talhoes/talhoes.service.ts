@@ -15,7 +15,7 @@ export class TalhoesService {
     return this.repo.find({ where, order: { created_at: 'DESC' } });
   }
 
-  findOne(id: string): Promise<Talhao> {
+  findOne(id: string): Promise<Talhao | null> {
     return this.repo.findOne({ where: { id } });
   }
 
@@ -23,8 +23,8 @@ export class TalhoesService {
     return this.repo.save(this.repo.create(dto));
   }
 
-  async update(id: string, dto: Partial<CreateTalhaoDto>): Promise<Talhao> {
-    await this.repo.update(id, dto);
+  async update(id: string, dto: Partial<CreateTalhaoDto>): Promise<Talhao | null> {
+    await this.repo.update(id, dto as any);
     return this.findOne(id);
   }
 

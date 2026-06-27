@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 import { TalhoesService } from './talhoes.service';
 import { CreateTalhaoDto } from './dto/create-talhao.dto';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(AuthGuard('jwt'))
 @Controller('talhoes')
 export class TalhoesController {
   constructor(private readonly service: TalhoesService) {}

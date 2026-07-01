@@ -1,34 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Talhao } from './talhoes.entity';
-import { CreateTalhaoDto } from './dto/create-talhao.dto';
+import { Talhao } from './talhao.entity';
 
 @Injectable()
 export class TalhoesService {
-  constructor(@InjectRepository(Talhao) private readonly repo: Repository<Talhao>) {}
+  constructor(@InjectRepository(Talhao) private repo: Repository<Talhao>) {}
 
-  findAll(propriedadeId?: string, usuarioId?: string): Promise<Talhao[]> {
-    const where: any = {};
-    if (propriedadeId) where.propriedade_id = propriedadeId;
-    if (usuarioId) where.usuario_id = usuarioId;
-    return this.repo.find({ where, order: { created_at: 'DESC' } });
+  findAll(propriedadeId?: string) {
+    if (propriedadeId) {
+      return this.repo.find({ where: { propriedade_id: propriedadeId } });
+    }
+    return this.repo.find();
   }
 
-  findOne(id: string): Promise<Talhao | null> {
+  findOne(id: string) {
     return this.repo.findOne({ where: { id } });
   }
 
-  create(dto: CreateTalhaoDto): Promise<Talhao> {
-    return this.repo.save(this.repo.create(dto));
+  create(data: Partial<Talhao>) {
+    return this.repo.save(data);
   }
 
-  async update(id: string, dto: Partial<CreateTalhaoDto>): Promise<Talhao | null> {
-    await this.repo.update(id, dto as any);
-    return this.findOne(id);
+  async update(id: string, data: Partial<Talhao>) {
+    await this.repo.update(id, data);
+    return this.repo.findOne({ where: { id } });
   }
 
-  async remove(id: string): Promise<void> {
-    await this.repo.delete(id);
+  remove(id: string) {
+    return this.repo.delete(id);
   }
 }

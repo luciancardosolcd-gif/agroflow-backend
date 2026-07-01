@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TalhoesModule } from './talhoes/talhoes.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';

@@ -1,32 +1,38 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/roles.guard';
 import { TalhoesService } from './talhoes.service';
-import { CreateTalhaoDto } from './dto/create-talhao.dto';
 
-@UseGuards(AuthGuard('jwt'))
+@ApiTags('Talhoes')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('talhoes')
 export class TalhoesController {
-  constructor(private readonly service: TalhoesService) {}
+  constructor(private service: TalhoesService) {}
 
   @Get()
-  findAll(@Query('propriedadeId') propriedadeId?: string, @Request() req?: any) {
-    return this.service.findAll(propriedadeId, req?.user?.id);
+  findAll(@Query('propriedadeId') propriedadeId?: string) {
+    return this.service.findAll(propriedadeId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) { return this.service.findOne(id); }
-
-  @Post()
-  create(@Body() dto: CreateTalhaoDto, @Request() req: any) {
-    dto.usuario_id = req?.user?.id;
-    return this.service.create(dto);
+  findOne(@Param('id') id: string) {
+    return this.service.findOne(id);
   }
 
-  @Put(':id')
-  update(@Param('id') id: string, @Body() dto: Partial<CreateTalhaoDto>) {
-    return this.service.update(id, dto);
+  @Post()
+  create(@Body() data: any) {
+    return this.service.create(data);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.service.update(id, data);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) { return this.service.remove(id); }
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
+  }
 }

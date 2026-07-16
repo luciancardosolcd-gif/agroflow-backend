@@ -18,7 +18,7 @@ import { SafrasModule } from './safras/safras.module';
 import { LogsModule } from './logs/logs.module';
 import { CotacoesInsumosModule } from './cotacoes-insumos/cotacoes-insumos.module';
 import { TalhoesModule } from './talhoes/talhoes.module';
-import { RegistrosClimaticosModule } from './registros-climaticos/registros-climaticos.module';
+import { RegistrosClimaticosModule } from './registros-climaticos/registros-climaticos.module'; 
 
 @Module({
   imports: [

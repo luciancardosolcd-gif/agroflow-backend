@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { TalhoesModule } from './talhoes/talhoes.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -18,7 +17,7 @@ import { SafrasModule } from './safras/safras.module';
 import { LogsModule } from './logs/logs.module';
 import { CotacoesInsumosModule } from './cotacoes-insumos/cotacoes-insumos.module';
 import { TalhoesModule } from './talhoes/talhoes.module';
-import { RegistrosClimaticosModule } from './registros-climaticos/registros-climaticos.module'; 
+import { RegistrosClimaticosModule } from './registros-climaticos/registros-climaticos.module';
 
 @Module({
   imports: [
